@@ -1,0 +1,59 @@
+plugins {
+    id 'com.android.application'
+}
+
+// GitHub Actions のビルド番号から versionCode を自動採番（上書き更新インストール用）
+def appVersionCode = {
+    def runNum = System.getenv("GITHUB_RUN_NUMBER")
+    return (runNum != null && runNum.isInteger()) ? runNum.toInteger() + 10 : 3
+}
+
+android {
+    namespace 'com.taryo.appalarm'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.taryo.appalarm"
+        minSdk 26
+        targetSdk 34
+        versionCode appVersionCode()
+        versionName "1.2"
+    }
+
+    // リポジトリ同梱の固定キーストアで署名 → 毎回同じ署名になり上書き更新可能
+    signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+        release {
+            signingConfig signingConfigs.debug
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+}

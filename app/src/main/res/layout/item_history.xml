@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@drawable/widget_background"
+    android:backgroundTint="#FFFFFF"
+    android:padding="12dp"
+    android:elevation="1dp"
+    android:gravity="center_vertical">
+
+    <TextView
+        android:id="@+id/history_time"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:textColor="#64748B"
+        android:textSize="12sp"
+        android:text="11/05 07:00" />
+
+    <TextView
+        android:id="@+id/history_label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textColor="#0F172A"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:singleLine="true"
+        android:text="YouTube" />
+
+    <TextView
+        android:id="@+id/history_badge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="3dp"
+        android:paddingBottom="3dp"
+        android:background="#D1FAE5"
+        android:textColor="#065F46"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:text="停止" />
+
+</LinearLayout>

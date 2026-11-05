@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">アプリ起動アラーム</string>
+    <string name="tile_label">AppAlarm</string>
+    <string name="tile_no_alarm">アラームOFF</string>
+    <string name="widget_name">AppAlarm 次のアラーム</string>
+    <string name="no_alarms">アラームがありません</string>
+    <string name="add_alarm">アラームを追加</string>
+    <string name="edit_alarm">アラームを編集</string>
+    <string name="delete">削除</string>
+    <string name="save">保存</string>
+    <string name="cancel">キャンセル</string>
+    <string name="confirm">確認</string>
+    <string name="snooze">スヌーズ</string>
+    <string name="stop">停止</string>
+    <string name="open_app">開く</string>
+    <string name="history_title">履歴・統計</string>
+    <string name="settings_title">設定</string>
+</resources>

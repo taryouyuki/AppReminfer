@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8FAFC">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_title"
+            android:textColor="#0F172A"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
+
+        <!-- システムカラー (Material You / Dynamic Colors) 設定カード -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/widget_background"
+            android:backgroundTint="#FFFFFF"
+            android:elevation="1dp"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="外観とシステム配色"
+                android:textColor="#0F172A"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_dynamic_color_desc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="壁紙やAndroidシステムのアクセントカラーをアプリ全体に適用します"
+                android:textColor="#64748B"
+                android:textSize="12sp"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="8dp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switch_dynamic_color"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="システムの色を使う (Material You)"
+                android:checked="true" />
+        </LinearLayout>
+
+        <!-- 音量フェードイン設定カード -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/widget_background"
+            android:backgroundTint="#FFFFFF"
+            android:elevation="1dp"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="音量フェードイン"
+                android:textColor="#0F172A"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="アラーム鳴動時、小さい音から徐々に音量を大きくします"
+                android:textColor="#64748B"
+                android:textSize="12sp"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="8dp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switch_fade_enabled"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="フェードインを有効にする"
+                android:checked="true" />
+
+            <LinearLayout
+                android:id="@+id/layout_fade_duration"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="フェードインにかける時間"
+                    android:textColor="#334155"
+                    android:textSize="13sp" />
+
+                <Spinner
+                    android:id="@+id/spinner_fade_seconds"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 履歴・統計設定カード -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/widget_background"
+            android:backgroundTint="#FFFFFF"
+            android:elevation="1dp"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="履歴と統計"
+                android:textColor="#0F172A"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="「停止」「スヌーズ」の履歴を記録し、二度寝傾向を分析します"
+                android:textColor="#64748B"
+                android:textSize="12sp"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="8dp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switch_history_enabled"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="履歴を保存する"
+                android:checked="true" />
+
+            <Button
+                android:id="@+id/btn_open_history"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:text="履歴・統計を確認する" />
+        </LinearLayout>
+
+        <!-- 再通知 (スヌーズ) 設定カード -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/widget_background"
+            android:backgroundTint="#FFFFFF"
+            android:elevation="1dp"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="再通知 (スヌーズ)"
+                android:textColor="#0F172A"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="再通知までの時間"
+                    android:textColor="#334155"
+                    android:textSize="13sp" />
+
+                <Spinner
+                    android:id="@+id/spinner_snooze_minutes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="再通知の上限回数"
+                    android:textColor="#334155"
+                    android:textSize="13sp" />
+
+                <Spinner
+                    android:id="@+id/spinner_max_snooze"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- バックアップと復元カード -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/widget_background"
+            android:backgroundTint="#FFFFFF"
+            android:elevation="1dp"
+            android:padding="16dp"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="バックアップと復元"
+                android:textColor="#0F172A"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btn_export_backup"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:text="書き出し" />
+
+                <Button
+                    android:id="@+id/btn_import_backup"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:text="復元" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

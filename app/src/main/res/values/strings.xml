@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">アプリ起動アラーム</string>
-    <string name="tile_label">AppAlarm</string>
+    <string name="app_name">アプリ起動アラーム achi</string>
+    <string name="tile_label">AppAlarm achi</string>
     <string name="tile_no_alarm">アラームOFF</string>
     <string name="widget_name">AppAlarm 次のアラーム</string>
     <string name="no_alarms">アラームがありません</string>

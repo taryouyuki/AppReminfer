@@ -13,7 +13,7 @@ android {
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.taryo.appalarm"
+        applicationId "com.achi.appalarm"
         minSdk 26
         targetSdk 34
         versionCode appVersionCode()

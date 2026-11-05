@@ -2,7 +2,10 @@ package com.taryo.appalarm;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.widget.ImageView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,11 +31,13 @@ public class MainActivity extends AppCompatActivity {
     private ChipGroup chipGroupTags;
     private TextView tvNextSummary;
     private String selectedTag = null; // null = all
+    private String appliedThemeKey;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         DynamicThemeHelper.applyToActivity(this);
+        super.onCreate(savedInstanceState);
+        appliedThemeKey = DynamicThemeHelper.themeKey(this);
         setContentView(R.layout.activity_main);
 
         NotificationHelper.createChannels(this);
@@ -73,6 +78,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (!DynamicThemeHelper.themeKey(this).equals(appliedThemeKey)) {
+            recreate();
+            return;
+        }
         loadAlarmsAndRefresh();
     }
 
@@ -192,6 +201,25 @@ public class MainActivity extends AppCompatActivity {
             TextView tvSummary = convertView.findViewById(R.id.item_summary);
             TextView tvBadge = convertView.findViewById(R.id.item_group_badge);
             SwitchCompat switchCompat = convertView.findViewById(R.id.item_switch);
+            ImageView ivIcon = convertView.findViewById(R.id.item_app_icon);
+
+            // 対象アプリのアイコンを表示（取得できなければ既定のベルアイコン）
+            Drawable appIcon = null;
+            if (entry.pkg != null && !entry.pkg.isEmpty()) {
+                try {
+                    appIcon = getPackageManager().getApplicationIcon(entry.pkg);
+                } catch (PackageManager.NameNotFoundException ignored) {
+                }
+            }
+            if (appIcon != null) {
+                ivIcon.setImageTintList(null);
+                ivIcon.setImageDrawable(appIcon);
+            } else {
+                ivIcon.setImageResource(R.drawable.ic_tile_alarm);
+                ivIcon.setImageTintList(android.content.res.ColorStateList.valueOf(
+                        com.google.android.material.color.MaterialColors.getColor(ivIcon,
+                                androidx.appcompat.R.attr.colorPrimary)));
+            }
 
             tvTime.setText(NextTime.timeText(entry));
             tvLabel.setText(entry.label != null && !entry.label.isEmpty() ? entry.label : "アプリ未選択");

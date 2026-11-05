@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="stat_success">#34D399</color>
+    <color name="stat_warning">#FBBF24</color>
+    <color name="badge_stop_bg">#064E3B</color>
+    <color name="badge_stop_fg">#A7F3D0</color>
+    <color name="badge_snooze_bg">#78350F</color>
+    <color name="badge_snooze_fg">#FDE68A</color>
+    <color name="badge_auto_bg">#312E81</color>
+    <color name="badge_auto_fg">#C7D2FE</color>
+    <color name="badge_notify_bg">#1E3A8A</color>
+    <color name="badge_notify_fg">#BFDBFE</color>
+</resources>

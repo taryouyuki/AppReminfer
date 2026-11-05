@@ -1,82 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Widget.Material3.CardView.Filled"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:background="@drawable/widget_background"
-    android:backgroundTint="#FFFFFF"
-    android:padding="14dp"
-    android:elevation="1dp"
-    android:gravity="center_vertical">
-
-    <ImageView
-        android:id="@+id/item_app_icon"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:src="@drawable/ic_tile_alarm"
-        android:contentDescription="icon" />
+    app:cardBackgroundColor="?attr/colorSurfaceContainer"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="0dp">
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:layout_marginStart="12dp"
-        android:orientation="vertical">
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/item_app_icon"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:contentDescription="アプリのアイコン"
+            android:src="@drawable/ic_tile_alarm"
+            app:tint="?attr/colorPrimary" />
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/item_time"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#0F172A"
-                android:textSize="22sp"
-                android:textStyle="bold"
-                android:text="07:00" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <!-- グループバッジ -->
+                <TextView
+                    android:id="@+id/item_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="07:00"
+                    android:textAppearance="?attr/textAppearanceHeadlineMedium"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <TextView
+                    android:id="@+id/item_group_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/bg_badge"
+                    android:backgroundTint="?attr/colorSecondaryContainer"
+                    android:paddingStart="8dp"
+                    android:paddingTop="2dp"
+                    android:paddingEnd="8dp"
+                    android:paddingBottom="2dp"
+                    android:text="朝"
+                    android:textAppearance="?attr/textAppearanceLabelSmall"
+                    android:textColor="?attr/colorOnSecondaryContainer"
+                    android:visibility="gone" />
+            </LinearLayout>
+
             <TextView
-                android:id="@+id/item_group_badge"
+                android:id="@+id/item_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:paddingStart="6dp"
-                android:paddingEnd="6dp"
-                android:paddingTop="2dp"
-                android:paddingBottom="2dp"
-                android:background="#DBEAFE"
-                android:textColor="#1E40AF"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:visibility="gone"
-                android:text="朝" />
+                android:text="YouTube"
+                android:textAppearance="?attr/textAppearanceTitleSmall"
+                android:textColor="?attr/colorOnSurface" />
+
+            <TextView
+                android:id="@+id/item_summary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="月火水木金"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/item_label"
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/item_switch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#334155"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:text="YouTube" />
-
-        <TextView
-            android:id="@+id/item_summary"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#64748B"
-            android:textSize="11sp"
-            android:text="月火水木金 ・ 標準音" />
+            android:minHeight="48dp" />
     </LinearLayout>
-
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/item_switch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-</LinearLayout>
+</com.google.android.material.card.MaterialCardView>

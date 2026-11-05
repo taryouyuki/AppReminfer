@@ -1,9 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.AppAlarm" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryVariant">@color/primary_dark</item>
-        <item name="colorSecondary">@color/accent</item>
-        <item name="android:statusBarColor">@color/primary_dark</item>
+    <!-- ライト配色。ダークは values-night/styles.xml。システムの色(Material You)は有効時に上書きされる -->
+    <style name="Theme.AppAlarm" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">#2563EB</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#DBE6FF</item>
+        <item name="colorOnPrimaryContainer">#001A41</item>
+        <item name="colorSecondary">#575E71</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="colorSecondaryContainer">#DBE2F9</item>
+        <item name="colorOnSecondaryContainer">#141B2C</item>
+        <item name="android:colorBackground">#FAF9FD</item>
+        <item name="colorSurface">#FAF9FD</item>
+        <item name="colorOnSurface">#1A1B20</item>
+        <item name="colorSurfaceVariant">#E1E2EC</item>
+        <item name="colorOnSurfaceVariant">#44474F</item>
+        <item name="colorSurfaceContainerLowest">#FFFFFF</item>
+        <item name="colorSurfaceContainerLow">#F4F3F7</item>
+        <item name="colorSurfaceContainer">#EEEDF1</item>
+        <item name="colorSurfaceContainerHigh">#E8E7EB</item>
+        <item name="colorSurfaceContainerHighest">#E3E2E6</item>
+        <item name="colorOutline">#74777F</item>
+        <item name="colorOutlineVariant">#C4C6D0</item>
+        <item name="colorError">#BA1A1A</item>
+        <item name="colorOnError">#FFFFFF</item>
+        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:navigationBarColor">?attr/colorSurface</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+
+    <!-- アラーム鳴動画面は常に暗い配色 -->
+    <style name="Theme.AppAlarm.Wake" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:statusBarColor">#121722</item>
+        <item name="android:navigationBarColor">#121722</item>
+        <item name="android:windowBackground">#121722</item>
     </style>
 </resources>

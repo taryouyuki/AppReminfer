@@ -17,8 +17,8 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         DynamicThemeHelper.applyToActivity(this);
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
         final SharedPreferences prefs = getSharedPreferences("appalarm_prefs", MODE_PRIVATE);
@@ -43,6 +43,28 @@ public class SettingsActivity extends AppCompatActivity {
             switchDynamicColor.setChecked(false);
             tvDynamicDesc.setText("※ Android 12以降の端末で利用できます（現在の端末は非対応）");
         }
+
+        // 0-b. 画面テーマ (システム / ライト / ダーク)
+        Spinner spinnerTheme = findViewById(R.id.spinner_theme_mode);
+        String[] themeLabels = new String[]{"システムに合わせる", "ライト", "ダーク"};
+        ArrayAdapter<String> themeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, themeLabels);
+        themeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerTheme.setAdapter(themeAdapter);
+        final int savedThemeMode = DynamicThemeHelper.getThemeMode(this);
+        spinnerTheme.setSelection(savedThemeMode, false);
+        spinnerTheme.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position != DynamicThemeHelper.getThemeMode(SettingsActivity.this)) {
+                    DynamicThemeHelper.setThemeMode(SettingsActivity.this, position);
+                    // 設定変更後、全画面が自動的に作り直される
+                    DynamicThemeHelper.applyNightMode(SettingsActivity.this);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
 
         // 1. 音量フェードイン設定
         SwitchCompat switchFade = findViewById(R.id.switch_fade_enabled);

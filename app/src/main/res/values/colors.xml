@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="primary">#2563EB</color>
-    <color name="primary_dark">#1D4ED8</color>
-    <color name="accent">#3B82F6</color>
-    <color name="bg_dark">#121722</color>
-    <color name="text_primary">#0F172A</color>
-    <color name="text_secondary">#64748B</color>
-    <color name="danger">#EF4444</color>
-    <color name="success">#10B981</color>
-    <color name="warning">#F59E0B</color>
-    <color name="card_bg">#FFFFFF</color>
+
+    <!-- 履歴画面の状態色（ライト） -->
+    <color name="stat_success">#059669</color>
+    <color name="stat_warning">#D97706</color>
+    <color name="badge_stop_bg">#D1FAE5</color>
+    <color name="badge_stop_fg">#065F46</color>
+    <color name="badge_snooze_bg">#FEF3C7</color>
+    <color name="badge_snooze_fg">#92400E</color>
+    <color name="badge_auto_bg">#E0E7FF</color>
+    <color name="badge_auto_fg">#3730A3</color>
+    <color name="badge_notify_bg">#DBEAFE</color>
+    <color name="badge_notify_fg">#1E40AF</color>
 </resources>

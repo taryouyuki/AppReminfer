@@ -35,6 +35,7 @@
         <activity
             android:name=".WakeActivity"
             android:exported="false"
+            android:theme="@style/Theme.AppAlarm.Wake"
             android:showWhenLocked="true"
             android:turnScreenOn="true"
             android:excludeFromRecents="true" />

@@ -3,7 +3,9 @@ package com.taryo.appalarm;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
+import androidx.core.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,11 +29,13 @@ public class HistoryActivity extends AppCompatActivity {
     private TextView tvStopped;
     private TextView tvSnoozed;
     private TextView tvInsight;
+    private String appliedThemeKey;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         DynamicThemeHelper.applyToActivity(this);
+        super.onCreate(savedInstanceState);
+        appliedThemeKey = DynamicThemeHelper.themeKey(this);
         setContentView(R.layout.activity_history);
 
         tvTotal = findViewById(R.id.tv_stat_total);
@@ -65,6 +69,14 @@ public class HistoryActivity extends AppCompatActivity {
                         .show();
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (!DynamicThemeHelper.themeKey(this).equals(appliedThemeKey)) {
+            recreate();
+        }
     }
 
     private void loadData() {
@@ -113,23 +125,28 @@ public class HistoryActivity extends AppCompatActivity {
             tvTime.setText(sdf.format(new Date(r.timestamp)));
             tvLabel.setText(r.label);
 
+            int bg;
+            int fg;
             if (HistoryRecord.ACTION_STOP.equals(r.action)) {
                 tvBadge.setText("停止");
-                tvBadge.setTextColor(0xFF065F46);
-                tvBadge.setBackgroundColor(0xFFD1FAE5);
+                bg = R.color.badge_stop_bg;
+                fg = R.color.badge_stop_fg;
             } else if (HistoryRecord.ACTION_SNOOZE.equals(r.action)) {
                 tvBadge.setText("スヌーズ");
-                tvBadge.setTextColor(0xFF92400E);
-                tvBadge.setBackgroundColor(0xFFFEF3C7);
+                bg = R.color.badge_snooze_bg;
+                fg = R.color.badge_snooze_fg;
             } else if (HistoryRecord.ACTION_AUTO.equals(r.action)) {
                 tvBadge.setText("自動起動");
-                tvBadge.setTextColor(0xFF3730A3);
-                tvBadge.setBackgroundColor(0xFFE0E7FF);
+                bg = R.color.badge_auto_bg;
+                fg = R.color.badge_auto_fg;
             } else {
                 tvBadge.setText("通知");
-                tvBadge.setTextColor(0xFF1E40AF);
-                tvBadge.setBackgroundColor(0xFFDBEAFE);
+                bg = R.color.badge_notify_bg;
+                fg = R.color.badge_notify_fg;
             }
+            tvBadge.setTextColor(ContextCompat.getColor(HistoryActivity.this, fg));
+            tvBadge.setBackgroundTintList(ColorStateList.valueOf(
+                    ContextCompat.getColor(HistoryActivity.this, bg)));
 
             return convertView;
         }

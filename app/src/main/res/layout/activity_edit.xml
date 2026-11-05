@@ -1,173 +1,209 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8FAFC">
+    android:background="?attr/colorSurface"
+    android:fitsSystemWindows="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="20dp"
+        android:paddingEnd="12dp">
 
         <TextView
             android:id="@+id/tv_edit_title"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="@string/edit_alarm"
-            android:textColor="#0F172A"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp" />
+            android:textAppearance="?attr/textAppearanceTitleLarge"
+            android:textColor="?attr/colorOnSurface" />
 
-        <!-- 時刻ピッカーカード -->
-        <LinearLayout
+    </LinearLayout>
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.Material3.CardView.Filled"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/widget_background"
-            android:backgroundTint="#FFFFFF"
-            android:elevation="1dp"
-            android:padding="16dp"
-            android:gravity="center"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="?attr/colorSurfaceContainer"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp">
 
-            <TimePicker
-                android:id="@+id/edit_time_picker"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:timePickerMode="spinner" />
-        </LinearLayout>
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        <!-- アプリ選択カード -->
-        <LinearLayout
+                <TimePicker
+                    android:id="@+id/edit_time_picker"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:timePickerMode="spinner" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.Material3.CardView.Filled"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/widget_background"
-            android:backgroundTint="#FFFFFF"
-            android:elevation="1dp"
-            android:padding="16dp"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="?attr/colorSurfaceContainer"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="開くアプリ"
-                android:textColor="#0F172A"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <Spinner
-                android:id="@+id/spinner_apps"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp" />
-        </LinearLayout>
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        <!-- グループ / タグ設定カード -->
-        <LinearLayout
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="開くアプリ"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textColor="?attr/colorOnSurface" />
+                <Spinner
+                    android:id="@+id/spinner_apps"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.Material3.CardView.Filled"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/widget_background"
-            android:backgroundTint="#FFFFFF"
-            android:elevation="1dp"
-            android:padding="16dp"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="?attr/colorSurfaceContainer"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="グループ / タグ"
-                android:textColor="#0F172A"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="「仕事」「朝」などで一覧を整理できます"
-                android:textColor="#64748B"
-                android:textSize="12sp"
-                android:layout_marginTop="2dp" />
-
-            <AutoCompleteTextView
-                android:id="@+id/edit_group_tag"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:hint="グループ名（例: 朝, 仕事, 休日）"
-                android:inputType="text"
-                android:maxLines="1" />
-        </LinearLayout>
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        <!-- 繰り返し設定カード -->
-        <LinearLayout
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="グループ / タグ"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textColor="?attr/colorOnSurface" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="「仕事」「朝」などで一覧を整理できます"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="グループ名（例: 朝, 仕事, 休日）">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/edit_group_tag"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:textColor="?attr/colorOnSurface" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.Material3.CardView.Filled"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/widget_background"
-            android:backgroundTint="#FFFFFF"
-            android:elevation="1dp"
-            android:padding="16dp"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="?attr/colorSurfaceContainer"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="繰り返し"
-                android:textColor="#0F172A"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <Spinner
-                android:id="@+id/spinner_repeat_mode"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp" />
+                android:orientation="vertical"
+                android:padding="16dp">
 
-            <CheckBox
-                android:id="@+id/cb_skip_holidays"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="日本の祝日はスキップする" />
-        </LinearLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="繰り返し"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textColor="?attr/colorOnSurface" />
+                <Spinner
+                    android:id="@+id/spinner_repeat_mode"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="4dp" />
+                <CheckBox
+                    android:id="@+id/cb_skip_holidays"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp"
+                    android:text="日本の祝日はスキップする"
+                    android:textColor="?attr/colorOnSurface" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-        <!-- 起動動作設定カード -->
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.Material3.CardView.Filled"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/widget_background"
-            android:backgroundTint="#FFFFFF"
-            android:elevation="1dp"
-            android:padding="16dp"
-            android:layout_marginBottom="24dp">
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="?attr/colorSurfaceContainer"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="起動のしかた"
-                android:textColor="#0F172A"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <CheckBox
-                android:id="@+id/cb_auto_open"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="確認せずに自動で開く" />
+                android:orientation="vertical"
+                android:padding="16dp">
 
-            <CheckBox
-                android:id="@+id/cb_alarm_mode"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="アラーム鳴動モード（全画面＋停止／スヌーズ）" />
-        </LinearLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="起動のしかた"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textColor="?attr/colorOnSurface" />
+                <CheckBox
+                    android:id="@+id/cb_auto_open"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp"
+                    android:text="確認せずに自動で開く"
+                    android:textColor="?attr/colorOnSurface" />
+                <CheckBox
+                    android:id="@+id/cb_alarm_mode"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp"
+                    android:text="アラーム鳴動モード（全画面＋停止／スヌーズ）"
+                    android:textColor="?attr/colorOnSurface" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -176,23 +212,23 @@
 
             <Button
                 android:id="@+id/btn_save"
+                style="@style/Widget.Material3.Button"
                 android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_weight="1"
+                android:layout_height="56dp"
                 android:layout_marginEnd="6dp"
-                android:text="@string/save"
-                android:backgroundTint="#2563EB"
-                android:textColor="#FFFFFF" />
+                android:layout_weight="1"
+                android:text="@string/save" />
 
             <Button
                 android:id="@+id/btn_delete"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_weight="1"
+                android:layout_height="56dp"
                 android:layout_marginStart="6dp"
+                android:layout_weight="1"
                 android:text="@string/delete"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:textColor="#EF4444" />
+                android:textColor="?attr/colorError"
+                app:strokeColor="?attr/colorError" />
         </LinearLayout>
 
     </LinearLayout>

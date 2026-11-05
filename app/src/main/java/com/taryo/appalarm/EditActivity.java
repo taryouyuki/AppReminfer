@@ -49,8 +49,8 @@ public class EditActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         DynamicThemeHelper.applyToActivity(this);
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit);
 
         timePicker = findViewById(R.id.edit_time_picker);

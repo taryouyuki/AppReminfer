@@ -261,8 +261,14 @@
                 </LinearLayout>
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="通知音モード" android:textAppearance="?attr/textAppearanceTitleSmall" android:textColor="?attr/colorOnSurface" />
                 <Spinner android:id="@+id/spinner_sound_mode" android:layout_width="match_parent" android:layout_height="56dp" />
+                <Button android:id="@+id/btn_choose_notification_sound" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Androidの通知音を選ぶ" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="通知音量" android:textAppearance="?attr/textAppearanceTitleSmall" android:textColor="?attr/colorOnSurface" />
+                <Spinner android:id="@+id/spinner_notification_volume" android:layout_width="match_parent" android:layout_height="56dp" />
                 <EditText android:id="@+id/edit_voice_text" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="読み上げる文章（空欄ならアラーム名）" android:inputType="textCapSentences|textMultiLine" android:maxLines="3" />
                 <Button android:id="@+id/btn_test_voice" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="合成音声を試聴" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="このアラームの再通知" android:textAppearance="?attr/textAppearanceTitleSmall" android:textColor="?attr/colorOnSurface" />
+                <Spinner android:id="@+id/spinner_alarm_snooze_minutes" android:layout_width="match_parent" android:layout_height="56dp" />
+                <Spinner android:id="@+id/spinner_alarm_snooze_max" android:layout_width="match_parent" android:layout_height="56dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

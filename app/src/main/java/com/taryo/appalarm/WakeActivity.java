@@ -79,6 +79,8 @@ public class WakeActivity extends AppCompatActivity {
         if (standaloneAlarm) btnStop.setText("アラームを停止");
 
         SharedPreferences prefs = getSharedPreferences("appalarm_prefs", MODE_PRIVATE);
+        AlarmEntry configuredAlarm = null;
+        for (AlarmEntry candidate : AlarmEntry.loadAll(prefs)) if (candidate.id == alarmId) { configuredAlarm = candidate; break; }
         boolean fadeEnabled = prefs.getBoolean("fade_enabled", true);
         int fadeSeconds = prefs.getInt("fade_seconds", 10);
 
@@ -105,8 +107,8 @@ public class WakeActivity extends AppCompatActivity {
             }
         });
 
-        int maxSnooze = prefs.getInt("default_max_snooze", 3);
-        int snoozeMin = prefs.getInt("default_snooze_min", 5);
+        int maxSnooze = configuredAlarm != null && configuredAlarm.maxSnooze != -1 ? configuredAlarm.maxSnooze : prefs.getInt("default_max_snooze", 3);
+        int snoozeMin = configuredAlarm != null && configuredAlarm.snoozeMinutes > 0 ? configuredAlarm.snoozeMinutes : prefs.getInt("default_snooze_min", 5);
         if (maxSnooze == -2 || (maxSnooze > 0 && snoozesUsed >= maxSnooze)) {
             btnSnooze.setVisibility(View.GONE);
         } else {

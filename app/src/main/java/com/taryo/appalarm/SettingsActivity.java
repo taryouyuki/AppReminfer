@@ -31,6 +31,7 @@ import java.util.Locale;
 
 public class SettingsActivity extends AppCompatActivity {
     private static final int REQ_EXPORT = 801, REQ_IMPORT = 802;
+    private static final int REQ_CALENDAR = 803, REQ_NOTIFICATIONS = 804;
     private SharedPreferences backupPrefs;
     private TextView tvBackupLast, tvPermissionStatus;
 
@@ -220,20 +221,33 @@ public class SettingsActivity extends AppCompatActivity {
                 + "\n電池最適化の対象外: " + status(unrestricted));
     }
 
+    @Override protected void onResume() { super.onResume(); if (tvPermissionStatus != null) refreshPermissionStatus(); }
+
+    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQ_CALENDAR || requestCode == REQ_NOTIFICATIONS) refreshPermissionStatus();
+    }
+
     private String status(boolean granted) { return granted ? "許可済み" : "未許可"; }
 
     private void showPermissionOptions() {
         refreshPermissionStatus();
-        String[] options = {"正確なアラーム設定", "通知設定", "全画面通知設定", "電池最適化設定", "カレンダー権限設定"};
+        String[] options = {"正確なアラーム設定", "通知の許可", "全画面通知設定", "電池最適化設定", "カレンダー権限を許可"};
         new android.app.AlertDialog.Builder(this).setTitle("現在の状態")
                 .setMessage(tvPermissionStatus.getText())
                 .setItems(options, (dialog, which) -> {
                     Intent intent;
+                    if (which == 1 && Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                        requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIFICATIONS); return;
+                    }
+                    if (which == 4 && checkSelfPermission(Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
+                        requestPermissions(new String[]{Manifest.permission.READ_CALENDAR}, REQ_CALENDAR); return;
+                    }
                     if (which == 0 && Build.VERSION.SDK_INT >= 31) intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:" + getPackageName()));
                     else if (which == 1) { intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS); intent.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName()); }
                     else if (which == 2 && Build.VERSION.SDK_INT >= 34) intent = new Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, Uri.parse("package:" + getPackageName()));
                     else if (which == 3) intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-                    else { intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName())); }
+                    else intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()));
                     try { startActivity(intent); } catch (Exception e) { Toast.makeText(this, "この設定画面を開けませんでした", Toast.LENGTH_SHORT).show(); }
                 }).setPositiveButton("閉じる", null).show();
     }

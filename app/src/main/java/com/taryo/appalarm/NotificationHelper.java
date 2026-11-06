@@ -43,12 +43,10 @@ public class NotificationHelper {
         if (nm == null) return;
 
         // 開くIntent
-        Intent openIntent = new Intent(context, AlarmReceiver.class);
-        openIntent.setAction(AlarmReceiver.ACTION_OPEN);
-        openIntent.putExtra("pkg", entry.pkg);
-        openIntent.putExtra("label", entry.label);
-        openIntent.putExtra("id", entry.id);
-        PendingIntent openPi = PendingIntent.getBroadcast(context, entry.id, openIntent,
+        Intent openIntent = entry.pkg == null || entry.pkg.isEmpty() ? null : context.getPackageManager().getLaunchIntentForPackage(entry.pkg);
+        if (openIntent == null) openIntent = new Intent(context, MainActivity.class);
+        openIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent openPi = PendingIntent.getActivity(context, entry.id, openIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         // スヌーズIntent
@@ -57,7 +55,6 @@ public class NotificationHelper {
         snoozeIntent.putExtra("id", entry.id);
         snoozeIntent.putExtra("label", entry.label);
         snoozeIntent.putExtra("snoozesUsed", snoozesUsed + 1);
-        snoozeIntent.putExtra("fixedDelayMinutes", 5);
         PendingIntent snoozePi = PendingIntent.getBroadcast(context, entry.id + 50000, snoozeIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
@@ -69,13 +66,6 @@ public class NotificationHelper {
         PendingIntent dismissPi = PendingIntent.getBroadcast(context, entry.id + 90000, dismissIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        Intent ignoreIntent = new Intent(context, AlarmReceiver.class);
-        ignoreIntent.setAction("com.taryo.appalarm.ACTION_IGNORE");
-        ignoreIntent.putExtra("id", entry.id);
-        ignoreIntent.putExtra("label", entry.label);
-        PendingIntent ignorePi = PendingIntent.getBroadcast(context, entry.id + 150000, ignoreIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
         NotificationCompat.Builder b = new NotificationCompat.Builder(context, CHANNEL_ID_PROMPT)
                 .setSmallIcon(R.drawable.ic_tile_alarm)
                 .setContentTitle("「" + entry.label + "」を開きますか？")
@@ -83,20 +73,27 @@ public class NotificationHelper {
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setLocalOnly(!entry.watchEnabled)
-                .setSilent(entry.soundMode == AlarmEntry.SOUND_SILENT || entry.soundMode == AlarmEntry.SOUND_VOICE)
+                .setSilent(true)
                 .setAutoCancel(true)
                 .setContentIntent(openPi)
                 .setDeleteIntent(dismissPi)
                 .addAction(R.drawable.ic_tile_alarm, "開く", openPi)
-                .addAction(R.drawable.ic_tile_alarm, "今回は無視", ignorePi);
+                ;
 
         SharedPreferences prefs = context.getSharedPreferences("appalarm_prefs", Context.MODE_PRIVATE);
         int maxSnooze = entry.maxSnooze != -1 ? entry.maxSnooze : prefs.getInt("default_max_snooze", 3);
         if (maxSnooze != -2 && (maxSnooze <= 0 || snoozesUsed < maxSnooze)) {
-            b.addAction(R.drawable.ic_tile_alarm, "5分後に再通知", snoozePi);
+            int delay = entry.snoozeMinutes > 0 ? entry.snoozeMinutes : prefs.getInt("default_snooze_min", 5);
+            b.addAction(R.drawable.ic_tile_alarm, delay + "分後に再通知", snoozePi);
         }
 
         nm.notify(entry.id, b.build());
+        if (entry.soundMode == AlarmEntry.SOUND_VOICE) VoiceAlarmService.start(context, entry.label, entry.voiceText);
+        else if (entry.soundMode == AlarmEntry.SOUND_DEFAULT || entry.soundMode == AlarmEntry.SOUND_CUSTOM) {
+            android.net.Uri uri = entry.soundMode == AlarmEntry.SOUND_CUSTOM && entry.soundUri != null && !entry.soundUri.isEmpty()
+                    ? android.net.Uri.parse(entry.soundUri) : android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION);
+            VoiceAlarmService.playTone(context, entry.label, uri, entry.notificationVolumePercent);
+        }
     }
 
     public static void showFullScreenAlarm(Context context, AlarmEntry entry, int snoozesUsed) {

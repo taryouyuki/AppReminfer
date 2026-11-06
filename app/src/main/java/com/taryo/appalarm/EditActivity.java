@@ -57,6 +57,7 @@ public class EditActivity extends AppCompatActivity {
     private CheckBox cbAlarmMode;
     private CheckBox cbStandaloneAlarm;
     private Spinner spinnerSoundMode;
+    private Spinner spinnerNotificationVolume, spinnerSnoozeMinutes, spinnerSnoozeMax;
     private EditText editVoiceText;
     private TextToSpeech previewTts;
     private CheckBox cbChallenge, cbQrChallenge, cbProgressive, cbCalendar, cbCloud, cbWatch, cbAnalytics;
@@ -68,7 +69,7 @@ public class EditActivity extends AppCompatActivity {
     private TextView tvExcludedDates, tvDateOverrides;
     private Button btnPreviewSound;
     private Ringtone previewRingtone;
-    private static final int REQ_ALARM_TONE = 902;
+    private static final int REQ_ALARM_TONE = 902, REQ_NOTIFICATION_TONE = 903;
 
     private List<AppItem> installedApps = new ArrayList<>();
     private List<AppItem> filteredApps = new ArrayList<>();
@@ -103,6 +104,9 @@ public class EditActivity extends AppCompatActivity {
         cbAlarmMode = findViewById(R.id.cb_alarm_mode);
         cbStandaloneAlarm = findViewById(R.id.cb_standalone_alarm);
         spinnerSoundMode = findViewById(R.id.spinner_sound_mode);
+        spinnerNotificationVolume = findViewById(R.id.spinner_notification_volume);
+        spinnerSnoozeMinutes = findViewById(R.id.spinner_alarm_snooze_minutes);
+        spinnerSnoozeMax = findViewById(R.id.spinner_alarm_snooze_max);
         editVoiceText = findViewById(R.id.edit_voice_text);
         cbChallenge = findViewById(R.id.cb_challenge); cbQrChallenge = findViewById(R.id.cb_qr_challenge);
         cbProgressive = findViewById(R.id.cb_progressive); cbCalendar = findViewById(R.id.cb_calendar);
@@ -113,6 +117,7 @@ public class EditActivity extends AppCompatActivity {
         Button btnDelete = findViewById(R.id.btn_delete);
         btnPreviewSound = findViewById(R.id.btn_preview_alarm_sound);
         findViewById(R.id.btn_choose_alarm_sound).setOnClickListener(v -> chooseAlarmSound());
+        findViewById(R.id.btn_choose_notification_sound).setOnClickListener(v -> chooseNotificationSound());
         btnPreviewSound.setOnClickListener(v -> previewAlarmSound());
         findViewById(R.id.btn_test_voice).setOnClickListener(v -> previewVoice());
         cbStandaloneAlarm.setOnCheckedChangeListener((button, checked) -> {
@@ -130,10 +135,13 @@ public class EditActivity extends AppCompatActivity {
         ArrayAdapter<String> repeatAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, repeatModes);
         repeatAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerRepeat.setAdapter(repeatAdapter);
-        String[] soundModes = new String[]{"標準の通知音", "無音で通知", "合成音声で読み上げ"};
+        String[] soundModes = new String[]{"Android標準の通知音", "Androidの通知音を選ぶ", "無音で通知", "合成音声で読み上げ"};
         ArrayAdapter<String> soundAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, soundModes);
         soundAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerSoundMode.setAdapter(soundAdapter);
+        setSpinner(spinnerNotificationVolume, new String[]{"小さめ", "普通", "大きめ"});
+        setSpinner(spinnerSnoozeMinutes, new String[]{"既定値を使う", "5分後", "10分後", "15分後", "30分後", "60分後"});
+        setSpinner(spinnerSnoozeMax, new String[]{"既定値を使う", "1回まで", "2回まで", "3回まで", "5回まで", "上限なし", "再通知しない"});
         String[] weekdayNames = new String[]{"月", "火", "水", "木", "金", "土", "日"};
         for (int i = 0; i < weekdayNames.length; i++) {
             Chip chip = new Chip(this); chip.setText(weekdayNames[i]); chip.setCheckable(true); chip.setChecked(i < 5);
@@ -186,7 +194,12 @@ public class EditActivity extends AppCompatActivity {
         cbAlarmMode.setChecked(entry.alarmMode);
         cbStandaloneAlarm.setChecked(entry.standaloneAlarm);
         cbAutoOpen.setEnabled(!entry.standaloneAlarm);
-        spinnerSoundMode.setSelection(entry.soundMode == AlarmEntry.SOUND_SILENT ? 1 : (entry.soundMode == AlarmEntry.SOUND_VOICE ? 2 : 0));
+        spinnerSoundMode.setSelection(entry.soundMode == AlarmEntry.SOUND_CUSTOM ? 1 : (entry.soundMode == AlarmEntry.SOUND_SILENT ? 2 : (entry.soundMode == AlarmEntry.SOUND_VOICE ? 3 : 0)));
+        spinnerNotificationVolume.setSelection(entry.notificationVolumePercent <= 45 ? 0 : (entry.notificationVolumePercent >= 90 ? 2 : 1));
+        int snoozeMin = entry.snoozeMinutes;
+        spinnerSnoozeMinutes.setSelection(snoozeMin <= 0 ? 0 : (snoozeMin == 5 ? 1 : snoozeMin == 10 ? 2 : snoozeMin == 15 ? 3 : snoozeMin == 30 ? 4 : 5));
+        int snoozeMax = entry.maxSnooze;
+        spinnerSnoozeMax.setSelection(snoozeMax == -1 ? 0 : snoozeMax == 1 ? 1 : snoozeMax == 2 ? 2 : snoozeMax == 3 ? 3 : snoozeMax == 5 ? 4 : snoozeMax == 0 ? 5 : 6);
         editVoiceText.setText(entry.voiceText == null ? "" : entry.voiceText);
         editGroupTag.setText(entry.group != null ? entry.group : "");
         cbChallenge.setChecked(entry.challengeEnabled && entry.challengeType == 0);
@@ -317,6 +330,21 @@ public class EditActivity extends AppCompatActivity {
         startActivityForResult(picker, REQ_ALARM_TONE);
     }
 
+    private void chooseNotificationSound() {
+        Intent picker = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
+        picker.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION);
+        picker.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false);
+        picker.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
+        if (entry.soundUri != null && !entry.soundUri.isEmpty()) picker.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, Uri.parse(entry.soundUri));
+        startActivityForResult(picker, REQ_NOTIFICATION_TONE);
+    }
+
+    private void setSpinner(Spinner spinner, String[] labels) {
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, labels);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+    }
+
     private void previewAlarmSound() {
         if (previewRingtone != null && previewRingtone.isPlaying()) { stopPreviewSound(); return; }
         Uri uri = entry.alarmSoundUri == null || entry.alarmSoundUri.isEmpty()
@@ -353,6 +381,11 @@ public class EditActivity extends AppCompatActivity {
             Uri uri = data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
             entry.alarmSoundUri = uri == null ? "" : uri.toString();
             Toast.makeText(this, "アラーム音を設定しました", Toast.LENGTH_SHORT).show();
+        }
+        if (requestCode == REQ_NOTIFICATION_TONE && resultCode == RESULT_OK && data != null) {
+            Uri uri = data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
+            entry.soundUri = uri == null ? "" : uri.toString();
+            Toast.makeText(this, "通知音を設定しました", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -418,7 +451,10 @@ public class EditActivity extends AppCompatActivity {
         entry.alarmMode = cbAlarmMode.isChecked();
         entry.standaloneAlarm = cbStandaloneAlarm.isChecked();
         int soundChoice = spinnerSoundMode.getSelectedItemPosition();
-        entry.soundMode = soundChoice == 1 ? AlarmEntry.SOUND_SILENT : (soundChoice == 2 ? AlarmEntry.SOUND_VOICE : AlarmEntry.SOUND_DEFAULT);
+        entry.soundMode = soundChoice == 1 ? AlarmEntry.SOUND_CUSTOM : (soundChoice == 2 ? AlarmEntry.SOUND_SILENT : (soundChoice == 3 ? AlarmEntry.SOUND_VOICE : AlarmEntry.SOUND_DEFAULT));
+        entry.notificationVolumePercent = new int[]{40, 70, 100}[spinnerNotificationVolume.getSelectedItemPosition()];
+        entry.snoozeMinutes = new int[]{-1, 5, 10, 15, 30, 60}[spinnerSnoozeMinutes.getSelectedItemPosition()];
+        entry.maxSnooze = new int[]{-1, 1, 2, 3, 5, 0, -2}[spinnerSnoozeMax.getSelectedItemPosition()];
         entry.voiceText = editVoiceText.getText().toString().trim();
         if (entry.standaloneAlarm) {
             entry.alarmMode = true; entry.autoOpen = false;

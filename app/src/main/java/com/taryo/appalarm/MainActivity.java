@@ -61,9 +61,7 @@ public class MainActivity extends AppCompatActivity {
 
         listView.setOnItemClickListener((parent, view, position, id) -> {
             AlarmEntry entry = displayedAlarms.get(position);
-            Intent intent = new Intent(MainActivity.this, EditActivity.class);
-            intent.putExtra("alarm_id", entry.id);
-            startActivity(intent);
+            openAlarmEditor(entry.id);
         });
 
         btnAdd.setOnClickListener(v -> {
@@ -244,6 +242,10 @@ public class MainActivity extends AppCompatActivity {
             }
 
             final AlarmEntry entry = displayedAlarms.get(position);
+            convertView.setClickable(true);
+            convertView.setFocusable(true);
+            convertView.setContentDescription("編集: " + (entry.label == null || entry.label.isEmpty() ? "アラーム" : entry.label));
+            convertView.setOnClickListener(v -> openAlarmEditor(entry.id));
             TextView tvTime = convertView.findViewById(R.id.item_time);
             TextView tvLabel = convertView.findViewById(R.id.item_label);
             TextView tvSummary = convertView.findViewById(R.id.item_summary);
@@ -272,6 +274,11 @@ public class MainActivity extends AppCompatActivity {
             tvTime.setText(NextTime.timeText(entry));
             tvLabel.setText(entry.label != null && !entry.label.isEmpty() ? entry.label : "アプリ未選択");
             tvSummary.setText(NextTime.daySummary(entry) + (entry.alarmMode ? " ・ アラーム" : (entry.autoOpen ? " ・ 自動起動" : "")));
+            ivIcon.setOnClickListener(v -> openAlarmEditor(entry.id));
+            tvTime.setOnClickListener(v -> openAlarmEditor(entry.id));
+            tvLabel.setOnClickListener(v -> openAlarmEditor(entry.id));
+            tvSummary.setOnClickListener(v -> openAlarmEditor(entry.id));
+            tvBadge.setOnClickListener(v -> openAlarmEditor(entry.id));
 
             if (entry.group != null && !entry.group.trim().isEmpty()) {
                 tvBadge.setText(entry.group);
@@ -294,5 +301,11 @@ public class MainActivity extends AppCompatActivity {
 
             return convertView;
         }
+    }
+
+    private void openAlarmEditor(int alarmId) {
+        Intent intent = new Intent(MainActivity.this, EditActivity.class);
+        intent.putExtra("alarm_id", alarmId);
+        startActivity(intent);
     }
 }

@@ -75,7 +75,7 @@
         android:layout_marginStart="20dp"
         android:layout_marginTop="6dp"
         android:layout_marginEnd="20dp"
-        android:text="アラームをタップすると編集できます（削除ボタンは編集画面の下部）"
+        android:text="時刻・名前部分をタップして編集。右のスイッチはON/OFF、削除は編集画面の下部です。"
         android:textAppearance="?attr/textAppearanceBodySmall"
         android:textColor="?attr/colorOnSurfaceVariant" />
 

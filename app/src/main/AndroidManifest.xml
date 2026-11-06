@@ -63,6 +63,7 @@
                 <action android:name="com.taryo.appalarm.ACTION_SNOOZE" />
                 <action android:name="com.taryo.appalarm.ACTION_OPEN" />
                 <action android:name="com.taryo.appalarm.ACTION_DISMISS" />
+                <action android:name="com.taryo.appalarm.ACTION_IGNORE" />
                 <action android:name="com.taryo.appalarm.ACTION_TOGGLE_NEXT" />
             </intent-filter>
         </receiver>

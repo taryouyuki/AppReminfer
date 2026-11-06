@@ -115,7 +115,21 @@ public class MainActivity extends AppCompatActivity {
         loadAlarmsAndRefresh();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             android.app.AlarmManager am = getSystemService(android.app.AlarmManager.class);
-            if (am != null && am.canScheduleExactAlarms()) AlarmReceiver.rescheduleAll(this, AlarmEntry.loadAll(getSharedPreferences("appalarm_prefs", MODE_PRIVATE)));
+            if (am != null && am.canScheduleExactAlarms()) {
+                AlarmReceiver.rescheduleAll(this, AlarmEntry.loadAll(getSharedPreferences("appalarm_prefs", MODE_PRIVATE)));
+                requestFullScreenPermissionIfNeeded();
+            }
+        }
+    }
+
+    private void requestFullScreenPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < 34) return;
+        android.app.NotificationManager manager = getSystemService(android.app.NotificationManager.class);
+        SharedPreferences prefs = getSharedPreferences("appalarm_prefs", MODE_PRIVATE);
+        if (manager != null && !manager.canUseFullScreenIntent() && !prefs.getBoolean("full_screen_prompted", false)) {
+            prefs.edit().putBoolean("full_screen_prompted", true).apply();
+            try { startActivity(new Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, Uri.parse("package:" + getPackageName()))); }
+            catch (Exception ignored) { }
         }
     }
 

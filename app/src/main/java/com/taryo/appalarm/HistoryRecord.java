@@ -16,6 +16,7 @@ public class HistoryRecord {
     public static final String ACTION_SNOOZE = "snooze";
     public static final String ACTION_AUTO = "auto";
     public static final String ACTION_NOTIFY = "notify";
+    public static final String ACTION_IGNORE = "ignore";
 
     public long timestamp;
     public String label = "";
@@ -104,17 +105,19 @@ public class HistoryRecord {
     public static Map<String, Integer> calculateStats(List<HistoryRecord> list) {
         Map<String, Integer> map = new HashMap<>();
         map.put("total", list.size());
-        int stop = 0, snooze = 0, auto = 0, notify = 0;
+        int stop = 0, snooze = 0, auto = 0, notify = 0, ignore = 0;
         for (HistoryRecord r : list) {
             if (ACTION_STOP.equals(r.action)) stop++;
             else if (ACTION_SNOOZE.equals(r.action)) snooze++;
             else if (ACTION_AUTO.equals(r.action)) auto++;
+            else if (ACTION_IGNORE.equals(r.action)) ignore++;
             else notify++;
         }
         map.put("stop", stop);
         map.put("snooze", snooze);
         map.put("auto", auto);
         map.put("notify", notify);
+        map.put("ignore", ignore);
         return map;
     }
 

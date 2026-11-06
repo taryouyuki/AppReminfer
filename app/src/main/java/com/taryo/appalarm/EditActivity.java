@@ -22,12 +22,17 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 import android.widget.SeekBar;
 import android.widget.EditText;
+import android.widget.AdapterView;
+import android.text.Editable;
+import android.text.TextWatcher;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Locale;
+import java.text.Collator;
 
 public class EditActivity extends AppCompatActivity {
 
@@ -44,6 +49,11 @@ public class EditActivity extends AppCompatActivity {
     private TextView tvVolume;
 
     private List<AppItem> installedApps = new ArrayList<>();
+    private List<AppItem> filteredApps = new ArrayList<>();
+    private AppSpinnerAdapter appAdapter;
+    private String selectedAppPackage = "";
+    private boolean updatingAppFilter = false;
+    private boolean initializingAppSelection = true;
     private AlarmEntry entry;
     private boolean isNew = false;
 
@@ -76,7 +86,8 @@ public class EditActivity extends AppCompatActivity {
         Button btnDelete = findViewById(R.id.btn_delete);
 
         loadInstalledApps();
-        AppSpinnerAdapter appAdapter = new AppSpinnerAdapter();
+        filteredApps.addAll(installedApps);
+        appAdapter = new AppSpinnerAdapter();
         spinnerApps.setAdapter(appAdapter);
 
         // 繰り返しモード
@@ -151,6 +162,20 @@ public class EditActivity extends AppCompatActivity {
                 break;
             }
         }
+        selectedAppPackage = entry.pkg == null ? "" : entry.pkg;
+        spinnerApps.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (!initializingAppSelection && !updatingAppFilter && position >= 0 && position < filteredApps.size()) selectedAppPackage = filteredApps.get(position).pkg;
+            }
+            @Override public void onNothingSelected(AdapterView<?> parent) { }
+        });
+        spinnerApps.post(() -> initializingAppSelection = false);
+        EditText appSearch = findViewById(R.id.edit_app_search);
+        appSearch.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { filterApps(s.toString()); }
+            @Override public void afterTextChanged(Editable s) { }
+        });
 
         if (entry.mode == AlarmEntry.MODE_ONCE) {
             spinnerRepeat.setSelection(1);
@@ -176,17 +201,48 @@ public class EditActivity extends AppCompatActivity {
                 installedApps.add(item);
             }
         }
+        Collator japanese = Collator.getInstance(Locale.JAPANESE);
+        japanese.setStrength(Collator.PRIMARY);
+        installedApps.sort((left, right) -> {
+            int leftGroup = sortGroup(left.label), rightGroup = sortGroup(right.label);
+            if (leftGroup != rightGroup) return Integer.compare(leftGroup, rightGroup);
+            if (leftGroup == 1) return left.label.toLowerCase(Locale.ROOT).compareTo(right.label.toLowerCase(Locale.ROOT));
+            return japanese.compare(left.label, right.label);
+        });
+    }
+
+    private int sortGroup(String label) {
+        if (label == null || label.isEmpty()) return 2;
+        for (int i = 0; i < label.length(); i++) {
+            Character.UnicodeBlock block = Character.UnicodeBlock.of(label.charAt(i));
+            if (block == Character.UnicodeBlock.HIRAGANA || block == Character.UnicodeBlock.KATAKANA
+                    || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS) return 0;
+        }
+        return label.matches(".*[A-Za-z].*") ? 1 : 2;
+    }
+
+    private void filterApps(String query) {
+        String normalized = query.trim().toLowerCase(Locale.ROOT);
+        updatingAppFilter = true;
+        filteredApps.clear();
+        for (AppItem item : installedApps) {
+            if (normalized.isEmpty() || item.label.toLowerCase(Locale.ROOT).contains(normalized)) filteredApps.add(item);
+        }
+        appAdapter.notifyDataSetChanged();
+        for (int i = 0; i < filteredApps.size(); i++) {
+            if (filteredApps.get(i).pkg.equals(selectedAppPackage)) { spinnerApps.setSelection(i); break; }
+        }
+        spinnerApps.post(() -> updatingAppFilter = false);
     }
 
     private void saveAlarm() {
         entry.hour = timePicker.getHour();
         entry.minute = timePicker.getMinute();
 
-        int selectedAppIdx = spinnerApps.getSelectedItemPosition();
-        if (selectedAppIdx >= 0 && selectedAppIdx < installedApps.size()) {
-            AppItem app = installedApps.get(selectedAppIdx);
-            entry.pkg = app.pkg;
-            entry.label = app.label;
+        if (selectedAppPackage != null && !selectedAppPackage.isEmpty()) {
+            for (AppItem app : installedApps) if (app.pkg.equals(selectedAppPackage)) {
+                entry.pkg = app.pkg; entry.label = app.label; break;
+            }
         }
 
         entry.group = editGroupTag.getText().toString().trim();
@@ -260,12 +316,12 @@ public class EditActivity extends AppCompatActivity {
     private class AppSpinnerAdapter extends BaseAdapter {
         @Override
         public int getCount() {
-            return installedApps.size();
+            return filteredApps.size();
         }
 
         @Override
         public Object getItem(int position) {
-            return installedApps.get(position);
+            return filteredApps.get(position);
         }
 
         @Override
@@ -277,14 +333,16 @@ public class EditActivity extends AppCompatActivity {
         public View getView(int position, View convertView, ViewGroup parent) {
             if (convertView == null) {
                 convertView = LayoutInflater.from(EditActivity.this)
-                        .inflate(android.R.layout.activity_list_item, parent, false);
+                        .inflate(R.layout.item_app_choice, parent, false);
             }
             AppItem item = installedApps.get(position);
-            TextView tv = convertView.findViewById(android.R.id.text1);
-            ImageView iv = convertView.findViewById(android.R.id.icon);
+            TextView tv = convertView.findViewById(R.id.app_choice_label);
+            ImageView iv = convertView.findViewById(R.id.app_choice_icon);
             tv.setText(item.label);
             iv.setImageDrawable(item.icon);
             return convertView;
         }
+
+        @Override public View getDropDownView(int position, View convertView, ViewGroup parent) { return getView(position, convertView, parent); }
     }
 }

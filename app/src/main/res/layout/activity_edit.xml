@@ -52,7 +52,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:timePickerMode="spinner" />
+                    android:timePickerMode="clock" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="文字盤の数字をタップして時・分を設定できます"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -77,10 +84,25 @@
                     android:text="開くアプリ"
                     android:textAppearance="?attr/textAppearanceTitleSmall"
                     android:textColor="?attr/colorOnSurface" />
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:hint="アプリ名で検索（例: map, YouTube）">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edit_app_search"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="actionSearch"
+                        android:inputType="text"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
                 <Spinner
                     android:id="@+id/spinner_apps"
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
+                    android:layout_height="72dp"
+                    android:dropDownWidth="match_parent"
                     android:layout_marginTop="4dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

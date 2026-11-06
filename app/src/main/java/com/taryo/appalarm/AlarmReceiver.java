@@ -41,6 +41,8 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         if (ACTION_SNOOZE.equals(action)) {
             int id = intent.getIntExtra("id", 0);
+            android.app.NotificationManager notificationManager = (android.app.NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (notificationManager != null) notificationManager.cancel(id);
             String label = intent.getStringExtra("label");
             int snoozesUsed = intent.getIntExtra("snoozesUsed", 1);
             List<AlarmEntry> list = AlarmEntry.loadAll(prefs);
@@ -54,8 +56,9 @@ public class AlarmReceiver extends BroadcastReceiver {
 
             if (target != null) {
                 HistoryRecord.record(context, label, HistoryRecord.ACTION_SNOOZE, id);
-                int min = target.snoozeMinutes > 0 ? target.snoozeMinutes : prefs.getInt("default_snooze_min", 5);
-                if (target.progressiveEnabled) min = Math.min(60, min * Math.max(1, snoozesUsed));
+                int fixedDelay = intent.getIntExtra("fixedDelayMinutes", -1);
+                int min = fixedDelay > 0 ? fixedDelay : (target.snoozeMinutes > 0 ? target.snoozeMinutes : prefs.getInt("default_snooze_min", 5));
+                if (target.progressiveEnabled && fixedDelay <= 0) min = Math.min(60, min * Math.max(1, snoozesUsed));
                 long triggerAt = System.currentTimeMillis() + (min * 60 * 1000L);
                 scheduleExact(context, target, triggerAt, snoozesUsed);
             }
@@ -67,6 +70,14 @@ public class AlarmReceiver extends BroadcastReceiver {
             android.app.NotificationManager nm = (android.app.NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             if (nm != null) nm.cancel(id);
             HistoryRecord.record(context, intent.getStringExtra("label"), HistoryRecord.ACTION_STOP, id);
+            return;
+        }
+
+        if ("com.taryo.appalarm.ACTION_IGNORE".equals(action)) {
+            int id = intent.getIntExtra("id", 0);
+            android.app.NotificationManager nm = (android.app.NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null) nm.cancel(id);
+            HistoryRecord.record(context, intent.getStringExtra("label"), HistoryRecord.ACTION_IGNORE, id);
             return;
         }
 

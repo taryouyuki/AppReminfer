@@ -57,6 +57,7 @@ public class NotificationHelper {
         snoozeIntent.putExtra("id", entry.id);
         snoozeIntent.putExtra("label", entry.label);
         snoozeIntent.putExtra("snoozesUsed", snoozesUsed + 1);
+        snoozeIntent.putExtra("fixedDelayMinutes", 5);
         PendingIntent snoozePi = PendingIntent.getBroadcast(context, entry.id + 50000, snoozeIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
@@ -66,6 +67,13 @@ public class NotificationHelper {
         dismissIntent.putExtra("id", entry.id);
         dismissIntent.putExtra("label", entry.label);
         PendingIntent dismissPi = PendingIntent.getBroadcast(context, entry.id + 90000, dismissIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        Intent ignoreIntent = new Intent(context, AlarmReceiver.class);
+        ignoreIntent.setAction("com.taryo.appalarm.ACTION_IGNORE");
+        ignoreIntent.putExtra("id", entry.id);
+        ignoreIntent.putExtra("label", entry.label);
+        PendingIntent ignorePi = PendingIntent.getBroadcast(context, entry.id + 150000, ignoreIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         NotificationCompat.Builder b = new NotificationCompat.Builder(context, CHANNEL_ID_PROMPT)
@@ -78,14 +86,13 @@ public class NotificationHelper {
                 .setAutoCancel(true)
                 .setContentIntent(openPi)
                 .setDeleteIntent(dismissPi)
-                .addAction(R.drawable.ic_tile_alarm, "開く", openPi);
+                .addAction(R.drawable.ic_tile_alarm, "開く", openPi)
+                .addAction(R.drawable.ic_tile_alarm, "今回は無視", ignorePi);
 
         SharedPreferences prefs = context.getSharedPreferences("appalarm_prefs", Context.MODE_PRIVATE);
         int maxSnooze = entry.maxSnooze != -1 ? entry.maxSnooze : prefs.getInt("default_max_snooze", 3);
-        int snoozeMin = entry.snoozeMinutes > 0 ? entry.snoozeMinutes : prefs.getInt("default_snooze_min", 5);
-
         if (maxSnooze != -2 && (maxSnooze <= 0 || snoozesUsed < maxSnooze)) {
-            b.addAction(R.drawable.ic_tile_alarm, "再通知 (" + snoozeMin + "分後)", snoozePi);
+            b.addAction(R.drawable.ic_tile_alarm, "5分後に再通知", snoozePi);
         }
 
         nm.notify(entry.id, b.build());

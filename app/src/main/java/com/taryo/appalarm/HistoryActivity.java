@@ -149,6 +149,10 @@ public class HistoryActivity extends AppCompatActivity {
                 tvBadge.setText("自動起動");
                 bg = R.color.badge_auto_bg;
                 fg = R.color.badge_auto_fg;
+            } else if (HistoryRecord.ACTION_IGNORE.equals(r.action)) {
+                tvBadge.setText("今回は無視");
+                bg = R.color.badge_notify_bg;
+                fg = R.color.badge_notify_fg;
             } else {
                 tvBadge.setText("通知");
                 bg = R.color.badge_notify_bg;

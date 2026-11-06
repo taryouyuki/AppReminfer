@@ -101,8 +101,12 @@ public class AlarmReceiver extends BroadcastReceiver {
                 AlarmEntry.saveAll(prefs, list);
             }
 
+            if (target.soundMode == AlarmEntry.SOUND_VOICE) {
+                VoiceAlarmService.start(context, target.label, target.voiceText);
+            }
+
             // アラーム鳴動モードか通知確認モードか
-            if (target.alarmMode) {
+            if (target.alarmMode || target.standaloneAlarm) {
                 HistoryRecord.record(context, target.label, HistoryRecord.ACTION_NOTIFY, target.id);
                 NotificationHelper.showFullScreenAlarm(context, target, snoozesUsed);
             } else if (target.autoOpen) {

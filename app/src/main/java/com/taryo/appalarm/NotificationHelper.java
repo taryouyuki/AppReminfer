@@ -83,6 +83,7 @@ public class NotificationHelper {
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setLocalOnly(!entry.watchEnabled)
+                .setSilent(entry.soundMode == AlarmEntry.SOUND_SILENT || entry.soundMode == AlarmEntry.SOUND_VOICE)
                 .setAutoCancel(true)
                 .setContentIntent(openPi)
                 .setDeleteIntent(dismissPi)
@@ -104,6 +105,7 @@ public class NotificationHelper {
         wake.putExtra("id", entry.id); wake.putExtra("pkg", entry.pkg); wake.putExtra("label", entry.label);
         wake.putExtra("alarmSoundUri", entry.alarmSoundUri); wake.putExtra("snoozesUsed", snoozesUsed);
         wake.putExtra("volumePercent", entry.volumePercent); wake.putExtra("challengeEnabled", entry.challengeEnabled);
+        wake.putExtra("standaloneAlarm", entry.standaloneAlarm);
         wake.putExtra("challengeType", entry.challengeType); wake.putExtra("challengeQrValue", entry.challengeQrValue);
         wake.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent full = PendingIntent.getActivity(context, entry.id + 120000, wake,

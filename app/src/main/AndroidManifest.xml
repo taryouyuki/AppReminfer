@@ -92,6 +92,11 @@
                 android:resource="@xml/widget_alarm_info" />
         </receiver>
 
+        <service
+            android:name=".VoiceAlarmService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
         <!-- クイック設定タイル (Quick Settings Tile) -->
         <service
             android:name=".AlarmTileService"

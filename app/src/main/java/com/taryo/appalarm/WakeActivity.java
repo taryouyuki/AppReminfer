@@ -34,6 +34,7 @@ public class WakeActivity extends AppCompatActivity {
     private String label;
     private int snoozesUsed;
     private boolean challengeEnabled;
+    private boolean standaloneAlarm;
     private int challengeType;
     private String qrValue;
 
@@ -62,6 +63,7 @@ public class WakeActivity extends AppCompatActivity {
         label = intent.getStringExtra("label");
         snoozesUsed = intent.getIntExtra("snoozesUsed", 0);
         challengeEnabled = intent.getBooleanExtra("challengeEnabled", false);
+        standaloneAlarm = intent.getBooleanExtra("standaloneAlarm", false);
         challengeType = intent.getIntExtra("challengeType", 0);
         qrValue = intent.getStringExtra("challengeQrValue");
 
@@ -73,7 +75,8 @@ public class WakeActivity extends AppCompatActivity {
 
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.JAPAN);
         tvTime.setText(sdf.format(new Date()));
-        tvTitle.setText("「" + (label != null ? label : "アプリ") + "」を開きますか？");
+        tvTitle.setText(standaloneAlarm ? "アラームが鳴っています" : "「" + (label != null ? label : "アプリ") + "」を開きますか？");
+        if (standaloneAlarm) btnStop.setText("アラームを停止");
 
         SharedPreferences prefs = getSharedPreferences("appalarm_prefs", MODE_PRIVATE);
         boolean fadeEnabled = prefs.getBoolean("fade_enabled", true);
@@ -92,7 +95,7 @@ public class WakeActivity extends AppCompatActivity {
                 stopSound();
                 cancelAlarmNotification();
                 HistoryRecord.record(WakeActivity.this, label, HistoryRecord.ACTION_STOP, alarmId);
-                if (pkg != null && !pkg.isEmpty()) {
+                if (!standaloneAlarm && pkg != null && !pkg.isEmpty()) {
                     Intent launch = getPackageManager().getLaunchIntentForPackage(pkg);
                     if (launch != null) {
                         startActivity(launch);
@@ -149,7 +152,7 @@ public class WakeActivity extends AppCompatActivity {
     private void dismissAfterChallenge() {
         stopSound(); HistoryRecord.record(this, label, HistoryRecord.ACTION_STOP, alarmId);
         cancelAlarmNotification();
-        if (pkg != null && !pkg.isEmpty()) { Intent launch = getPackageManager().getLaunchIntentForPackage(pkg); if (launch != null) startActivity(launch); }
+        if (!standaloneAlarm && pkg != null && !pkg.isEmpty()) { Intent launch = getPackageManager().getLaunchIntentForPackage(pkg); if (launch != null) startActivity(launch); }
         finish();
     }
 

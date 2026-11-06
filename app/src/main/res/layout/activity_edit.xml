@@ -242,10 +242,27 @@
                     android:minHeight="48dp"
                     android:text="アラーム鳴動モード（全画面＋停止／スヌーズ）"
                     android:textColor="?attr/colorOnSurface" />
+                <CheckBox
+                    android:id="@+id/cb_standalone_alarm"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp"
+                    android:text="アプリを起動せず、目覚まし時計として使う"
+                    android:textColor="?attr/colorOnSurface" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="アプリを選ばなくても鳴ります。停止後にアプリを開きません。"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
                     <Button android:id="@+id/btn_choose_alarm_sound" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="アラーム音を選ぶ" />
                     <Button android:id="@+id/btn_preview_alarm_sound" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="音を試聴" />
                 </LinearLayout>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="通知音モード" android:textAppearance="?attr/textAppearanceTitleSmall" android:textColor="?attr/colorOnSurface" />
+                <Spinner android:id="@+id/spinner_sound_mode" android:layout_width="match_parent" android:layout_height="56dp" />
+                <EditText android:id="@+id/edit_voice_text" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="読み上げる文章（空欄ならアラーム名）" android:inputType="textCapSentences|textMultiLine" android:maxLines="3" />
+                <Button android:id="@+id/btn_test_voice" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="合成音声を試聴" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

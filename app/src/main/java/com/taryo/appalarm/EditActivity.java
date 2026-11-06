@@ -7,6 +7,7 @@ import android.media.AudioAttributes;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.media.AudioManager;
+import android.speech.tts.TextToSpeech;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
@@ -54,6 +55,10 @@ public class EditActivity extends AppCompatActivity {
     private CheckBox cbSkipHolidays;
     private CheckBox cbAutoOpen;
     private CheckBox cbAlarmMode;
+    private CheckBox cbStandaloneAlarm;
+    private Spinner spinnerSoundMode;
+    private EditText editVoiceText;
+    private TextToSpeech previewTts;
     private CheckBox cbChallenge, cbQrChallenge, cbProgressive, cbCalendar, cbCloud, cbWatch, cbAnalytics;
     private EditText editQrValue;
     private SeekBar seekVolume;
@@ -96,6 +101,9 @@ public class EditActivity extends AppCompatActivity {
         tvExcludedDates = findViewById(R.id.tv_excluded_dates); tvDateOverrides = findViewById(R.id.tv_date_overrides);
         cbAutoOpen = findViewById(R.id.cb_auto_open);
         cbAlarmMode = findViewById(R.id.cb_alarm_mode);
+        cbStandaloneAlarm = findViewById(R.id.cb_standalone_alarm);
+        spinnerSoundMode = findViewById(R.id.spinner_sound_mode);
+        editVoiceText = findViewById(R.id.edit_voice_text);
         cbChallenge = findViewById(R.id.cb_challenge); cbQrChallenge = findViewById(R.id.cb_qr_challenge);
         cbProgressive = findViewById(R.id.cb_progressive); cbCalendar = findViewById(R.id.cb_calendar);
         cbCloud = findViewById(R.id.cb_cloud_backup); cbWatch = findViewById(R.id.cb_watch); cbAnalytics = findViewById(R.id.cb_analytics);
@@ -106,6 +114,11 @@ public class EditActivity extends AppCompatActivity {
         btnPreviewSound = findViewById(R.id.btn_preview_alarm_sound);
         findViewById(R.id.btn_choose_alarm_sound).setOnClickListener(v -> chooseAlarmSound());
         btnPreviewSound.setOnClickListener(v -> previewAlarmSound());
+        findViewById(R.id.btn_test_voice).setOnClickListener(v -> previewVoice());
+        cbStandaloneAlarm.setOnCheckedChangeListener((button, checked) -> {
+            cbAutoOpen.setEnabled(!checked);
+            if (checked) { cbAutoOpen.setChecked(false); cbAlarmMode.setChecked(true); }
+        });
 
         loadInstalledApps();
         filteredApps.addAll(installedApps);
@@ -117,6 +130,10 @@ public class EditActivity extends AppCompatActivity {
         ArrayAdapter<String> repeatAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, repeatModes);
         repeatAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerRepeat.setAdapter(repeatAdapter);
+        String[] soundModes = new String[]{"標準の通知音", "無音で通知", "合成音声で読み上げ"};
+        ArrayAdapter<String> soundAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, soundModes);
+        soundAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerSoundMode.setAdapter(soundAdapter);
         String[] weekdayNames = new String[]{"月", "火", "水", "木", "金", "土", "日"};
         for (int i = 0; i < weekdayNames.length; i++) {
             Chip chip = new Chip(this); chip.setText(weekdayNames[i]); chip.setCheckable(true); chip.setChecked(i < 5);
@@ -167,6 +184,10 @@ public class EditActivity extends AppCompatActivity {
         cbSkipHolidays.setChecked(entry.skipHolidays);
         cbAutoOpen.setChecked(entry.autoOpen);
         cbAlarmMode.setChecked(entry.alarmMode);
+        cbStandaloneAlarm.setChecked(entry.standaloneAlarm);
+        cbAutoOpen.setEnabled(!entry.standaloneAlarm);
+        spinnerSoundMode.setSelection(entry.soundMode == AlarmEntry.SOUND_SILENT ? 1 : (entry.soundMode == AlarmEntry.SOUND_VOICE ? 2 : 0));
+        editVoiceText.setText(entry.voiceText == null ? "" : entry.voiceText);
         editGroupTag.setText(entry.group != null ? entry.group : "");
         cbChallenge.setChecked(entry.challengeEnabled && entry.challengeType == 0);
         cbQrChallenge.setChecked(entry.challengeEnabled && entry.challengeType == 1);
@@ -204,7 +225,10 @@ public class EditActivity extends AppCompatActivity {
         selectedAppPackage = entry.pkg == null ? "" : entry.pkg;
         spinnerApps.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (!initializingAppSelection && !updatingAppFilter && position >= 0 && position < filteredApps.size()) selectedAppPackage = filteredApps.get(position).pkg;
+                if (!initializingAppSelection && !updatingAppFilter && position >= 0 && position < filteredApps.size()) {
+                    selectedAppPackage = filteredApps.get(position).pkg;
+                    if (selectedAppPackage.isEmpty()) cbStandaloneAlarm.setChecked(true);
+                }
             }
             @Override public void onNothingSelected(AdapterView<?> parent) { }
         });
@@ -229,6 +253,8 @@ public class EditActivity extends AppCompatActivity {
             @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) { weekdayGroup.setVisibility(position == 2 ? View.VISIBLE : View.GONE); }
             @Override public void onNothingSelected(AdapterView<?> parent) { }
         });
+        TextView editTitle = findViewById(R.id.tv_edit_title);
+        editTitle.setText(isNew ? "アラームを追加" : "アラームを編集（削除は画面下部）");
 
         btnSave.setOnClickListener(v -> saveAlarm());
         btnDelete.setOnClickListener(v -> deleteAlarm());
@@ -254,6 +280,8 @@ public class EditActivity extends AppCompatActivity {
             if (leftGroup == 1) return left.label.toLowerCase(Locale.ROOT).compareTo(right.label.toLowerCase(Locale.ROOT));
             return japanese.compare(left.label, right.label);
         });
+        AppItem none = new AppItem(); none.pkg = ""; none.label = "アプリを起動しない（アラームのみ）"; none.icon = null;
+        installedApps.add(0, none);
     }
 
     private int sortGroup(String label) {
@@ -301,6 +329,19 @@ public class EditActivity extends AppCompatActivity {
         new Handler(Looper.getMainLooper()).postDelayed(this::stopPreviewSound, 12000);
     }
 
+    private void previewVoice() {
+        String text = editVoiceText.getText().toString().trim();
+        if (text.isEmpty()) text = "アラームです";
+        if (previewTts != null) { previewTts.stop(); previewTts.shutdown(); }
+        final String sentence = text;
+        previewTts = new TextToSpeech(this, status -> {
+            if (status == TextToSpeech.SUCCESS && previewTts != null) {
+                previewTts.setLanguage(Locale.JAPAN);
+                previewTts.speak(sentence, TextToSpeech.QUEUE_FLUSH, null, "voice-preview");
+            } else Toast.makeText(this, "この端末では日本語の音声合成を利用できません", Toast.LENGTH_LONG).show();
+        });
+    }
+
     private void stopPreviewSound() {
         if (previewRingtone != null) { previewRingtone.stop(); previewRingtone = null; }
         if (btnPreviewSound != null) btnPreviewSound.setText("音を試聴");
@@ -315,7 +356,11 @@ public class EditActivity extends AppCompatActivity {
         }
     }
 
-    @Override protected void onStop() { stopPreviewSound(); super.onStop(); }
+    @Override protected void onStop() {
+        stopPreviewSound();
+        if (previewTts != null) { previewTts.stop(); previewTts.shutdown(); previewTts = null; }
+        super.onStop();
+    }
 
     private interface DateSelected { void onDate(String value); }
     private void showDatePicker(DateSelected callback) {
@@ -371,6 +416,14 @@ public class EditActivity extends AppCompatActivity {
         entry.skipHolidays = cbSkipHolidays.isChecked();
         entry.autoOpen = cbAutoOpen.isChecked();
         entry.alarmMode = cbAlarmMode.isChecked();
+        entry.standaloneAlarm = cbStandaloneAlarm.isChecked();
+        int soundChoice = spinnerSoundMode.getSelectedItemPosition();
+        entry.soundMode = soundChoice == 1 ? AlarmEntry.SOUND_SILENT : (soundChoice == 2 ? AlarmEntry.SOUND_VOICE : AlarmEntry.SOUND_DEFAULT);
+        entry.voiceText = editVoiceText.getText().toString().trim();
+        if (entry.standaloneAlarm) {
+            entry.alarmMode = true; entry.autoOpen = false;
+            if (entry.label == null || entry.label.trim().isEmpty()) entry.label = "アラーム";
+        }
         entry.challengeEnabled = cbChallenge.isChecked() || cbQrChallenge.isChecked();
         entry.challengeType = cbQrChallenge.isChecked() ? 1 : 0;
         entry.challengeQrValue = editQrValue.getText().toString(); entry.volumePercent = seekVolume.getProgress();
@@ -463,11 +516,11 @@ public class EditActivity extends AppCompatActivity {
                 convertView = LayoutInflater.from(EditActivity.this)
                         .inflate(R.layout.item_app_choice, parent, false);
             }
-            AppItem item = installedApps.get(position);
+            AppItem item = filteredApps.get(position);
             TextView tv = convertView.findViewById(R.id.app_choice_label);
             ImageView iv = convertView.findViewById(R.id.app_choice_icon);
             tv.setText(item.label);
-            iv.setImageDrawable(item.icon);
+            if (item.icon != null) iv.setImageDrawable(item.icon); else iv.setImageResource(R.drawable.ic_tile_alarm);
             return convertView;
         }
 

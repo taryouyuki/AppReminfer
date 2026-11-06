@@ -44,6 +44,7 @@ public class AlarmEntry {
 
     // Alarm mode & Sound
     public boolean alarmMode = false;
+    public boolean standaloneAlarm = false;
     public String alarmSoundUri = "";
     public int soundMode = SOUND_DEFAULT;
     public String soundUri = "";
@@ -96,6 +97,7 @@ public class AlarmEntry {
         obj.put("perDayMinute", mArr);
 
         obj.put("alarmMode", alarmMode);
+        obj.put("standaloneAlarm", standaloneAlarm);
         obj.put("alarmSoundUri", alarmSoundUri);
         obj.put("soundMode", soundMode);
         obj.put("soundUri", soundUri);
@@ -144,6 +146,7 @@ public class AlarmEntry {
         }
 
         e.alarmMode = obj.optBoolean("alarmMode", false);
+        e.standaloneAlarm = obj.optBoolean("standaloneAlarm", false);
         e.alarmSoundUri = obj.optString("alarmSoundUri", "");
         e.soundMode = obj.optInt("soundMode", SOUND_DEFAULT);
         e.soundUri = obj.optString("soundUri", "");

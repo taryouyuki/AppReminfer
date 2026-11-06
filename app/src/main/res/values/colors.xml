@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#2563EB</color>
+    <color name="primary">#F2A3B9</color>
 
     <!-- 履歴画面の状態色（ライト） -->
     <color name="stat_success">#059669</color>

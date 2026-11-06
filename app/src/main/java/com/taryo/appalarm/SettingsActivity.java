@@ -133,6 +133,21 @@ public class SettingsActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {}
         });
 
+        android.widget.SeekBar seekTtsOffset = findViewById(R.id.seek_tts_volume_offset);
+        TextView tvTtsOffset = findViewById(R.id.tv_tts_volume_offset);
+        int ttsOffset = Math.max(-5, Math.min(5, prefs.getInt("tts_volume_offset_steps", 3)));
+        seekTtsOffset.setProgress(ttsOffset + 5);
+        tvTtsOffset.setText("通知音量 " + (ttsOffset > 0 ? "+" : "") + ttsOffset + "段階");
+        seekTtsOffset.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
+            @Override public void onProgressChanged(android.widget.SeekBar bar, int progress, boolean fromUser) {
+                int offset = progress - 5;
+                tvTtsOffset.setText("通知音量 " + (offset > 0 ? "+" : "") + offset + "段階");
+                if (fromUser) prefs.edit().putInt("tts_volume_offset_steps", offset).apply();
+            }
+            @Override public void onStartTrackingTouch(android.widget.SeekBar bar) { }
+            @Override public void onStopTrackingTouch(android.widget.SeekBar bar) { }
+        });
+
         // 2. 履歴・統計設定
         SwitchCompat switchHistory = findViewById(R.id.switch_history_enabled);
         Button btnHistory = findViewById(R.id.btn_open_history);

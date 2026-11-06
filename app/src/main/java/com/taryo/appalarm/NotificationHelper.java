@@ -87,13 +87,14 @@ public class NotificationHelper {
             b.addAction(R.drawable.ic_tile_alarm, delay + "分後に再通知", snoozePi);
         }
 
-        nm.notify(entry.id, b.build());
+        // Start audible output independently of whether notification permission is granted.
         if (entry.soundMode == AlarmEntry.SOUND_VOICE) VoiceAlarmService.start(context, entry.label, entry.voiceText);
         else if (entry.soundMode == AlarmEntry.SOUND_DEFAULT || entry.soundMode == AlarmEntry.SOUND_CUSTOM) {
             android.net.Uri uri = entry.soundMode == AlarmEntry.SOUND_CUSTOM && entry.soundUri != null && !entry.soundUri.isEmpty()
                     ? android.net.Uri.parse(entry.soundUri) : android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION);
             VoiceAlarmService.playTone(context, entry.label, uri, entry.notificationVolumePercent);
         }
+        nm.notify(entry.id, b.build());
     }
 
     public static void showFullScreenAlarm(Context context, AlarmEntry entry, int snoozesUsed) {

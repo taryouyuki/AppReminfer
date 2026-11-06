@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
 import android.media.AudioAttributes;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -140,7 +141,7 @@ public class VoiceAlarmService extends Service implements TextToSpeech.OnInitLis
     @Override public void onInit(int status) {
         if (status != TextToSpeech.SUCCESS || tts == null) { stopSelf(); return; }
         tts.setAudioAttributes(new AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setUsage(AudioAttributes.USAGE_ALARM)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                 .build());
         int language = tts.setLanguage(Locale.JAPAN);
@@ -159,7 +160,15 @@ public class VoiceAlarmService extends Service implements TextToSpeech.OnInitLis
     private void speakPending() {
         if (!ready || tts == null || pendingText == null) return;
         tts.stop();
-        tts.speak(pendingText, TextToSpeech.QUEUE_FLUSH, null, "alarm-" + latestStartId);
+        AudioManager audio = (AudioManager) getSystemService(AUDIO_SERVICE);
+        int max = audio == null ? 0 : audio.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
+        int current = audio == null ? max : audio.getStreamVolume(AudioManager.STREAM_NOTIFICATION);
+        int offset = getSharedPreferences("appalarm_prefs", MODE_PRIVATE).getInt("tts_volume_offset_steps", 3);
+        offset = Math.max(-5, Math.min(5, offset));
+        float level = max <= 0 ? 1f : Math.max(0, Math.min(max, current + offset)) / (float) max;
+        android.os.Bundle parameters = new android.os.Bundle();
+        parameters.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, level);
+        tts.speak(pendingText, TextToSpeech.QUEUE_FLUSH, parameters, "alarm-" + latestStartId);
     }
 
     @Override public void onDestroy() {

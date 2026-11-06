@@ -71,6 +71,17 @@ public class VoiceAlarmService extends Service implements TextToSpeech.OnInitLis
 
     public static void stopPlayback(Context context) { context.stopService(new Intent(context, VoiceAlarmService.class)); }
 
+    public static int getTtsVolumeOffset(Context context) {
+        android.content.SharedPreferences prefs = context.getSharedPreferences("appalarm_prefs", Context.MODE_PRIVATE);
+        if (!prefs.getBoolean("tts_volume_boost_v2", false)) {
+            int previous = prefs.getInt("tts_volume_offset_steps", 3);
+            android.content.SharedPreferences.Editor edit = prefs.edit().putBoolean("tts_volume_boost_v2", true);
+            if (!prefs.contains("tts_volume_offset_steps") || previous == 3) edit.putInt("tts_volume_offset_steps", 5);
+            edit.apply();
+        }
+        return Math.max(-5, Math.min(5, prefs.getInt("tts_volume_offset_steps", 5)));
+    }
+
     @Override public void onCreate() {
         super.onCreate();
         createChannel();
@@ -163,8 +174,7 @@ public class VoiceAlarmService extends Service implements TextToSpeech.OnInitLis
         AudioManager audio = (AudioManager) getSystemService(AUDIO_SERVICE);
         int max = audio == null ? 0 : audio.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
         int current = audio == null ? max : audio.getStreamVolume(AudioManager.STREAM_NOTIFICATION);
-        int offset = getSharedPreferences("appalarm_prefs", MODE_PRIVATE).getInt("tts_volume_offset_steps", 3);
-        offset = Math.max(-5, Math.min(5, offset));
+        int offset = getTtsVolumeOffset(this);
         float level = max <= 0 ? 1f : Math.max(0, Math.min(max, current + offset)) / (float) max;
         android.os.Bundle parameters = new android.os.Bundle();
         parameters.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, level);

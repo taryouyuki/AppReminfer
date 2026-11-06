@@ -11,6 +11,7 @@ import android.speech.tts.TextToSpeech;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Build;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -209,6 +210,7 @@ public class EditActivity extends AppCompatActivity {
         cbAutoOpen.setChecked(entry.autoOpen);
         cbAlarmMode.setChecked(entry.alarmMode);
         cbStandaloneAlarm.setChecked(entry.standaloneAlarm);
+        cbAlarmMode.setOnCheckedChangeListener((button, checked) -> { if (checked) checkAlarmDisplaySetup(); });
         cbAutoOpen.setEnabled(!entry.standaloneAlarm);
         spinnerSoundMode.setSelection(entry.soundMode == AlarmEntry.SOUND_CUSTOM ? 1 : (entry.soundMode == AlarmEntry.SOUND_SILENT ? 2 : (entry.soundMode == AlarmEntry.SOUND_VOICE ? 3 : 0)));
         spinnerNotificationVolume.setSelection(entry.notificationVolumePercent <= 45 ? 0 : (entry.notificationVolumePercent >= 90 ? 2 : 1));
@@ -353,6 +355,45 @@ public class EditActivity extends AppCompatActivity {
         picker.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
         if (entry.soundUri != null && !entry.soundUri.isEmpty()) picker.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, Uri.parse(entry.soundUri));
         startActivityForResult(picker, REQ_NOTIFICATION_TONE);
+    }
+
+    private void checkAlarmDisplaySetup() {
+        android.app.NotificationManager manager = getSystemService(android.app.NotificationManager.class);
+        boolean notificationsMissing = Build.VERSION.SDK_INT >= 33
+                && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED;
+        boolean fullScreenMissing = Build.VERSION.SDK_INT >= 34 && manager != null && !manager.canUseFullScreenIntent();
+        android.app.NotificationChannel channel = Build.VERSION.SDK_INT >= 26 && manager != null
+                ? manager.getNotificationChannel(NotificationHelper.CHANNEL_ID_ALARM) : null;
+        boolean channelTooLow = channel != null && channel.getImportance() < android.app.NotificationManager.IMPORTANCE_HIGH;
+        if (!notificationsMissing && !fullScreenMissing && !channelTooLow) {
+            Toast.makeText(this, "全画面通知とアラーム通知の重要度は許可済みです。画面が点灯中はAndroidが通知表示に切り替える場合があります", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        StringBuilder message = new StringBuilder("画面消灯中にアラーム画面を自動で開くには、次の設定を確認してください。");
+        if (notificationsMissing) message.append("\n・アプリの通知を許可");
+        if (fullScreenMissing) message.append("\n・全画面通知を許可");
+        if (channelTooLow) message.append("\n・「アラーム」通知の重要度を「高」にし、ロック画面への表示を許可");
+        message.append("\n許可が不足していると、通知を押すまでアラーム画面が開かないことがあります。");
+
+        Intent settings;
+        if (fullScreenMissing) {
+            settings = new Intent(android.provider.Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT,
+                    Uri.parse("package:" + getPackageName()));
+        } else if (channelTooLow && Build.VERSION.SDK_INT >= 26) {
+            settings = new Intent(android.provider.Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS);
+            settings.putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, getPackageName());
+            settings.putExtra(android.provider.Settings.EXTRA_CHANNEL_ID, NotificationHelper.CHANNEL_ID_ALARM);
+        } else {
+            settings = new Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+            settings.putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, getPackageName());
+        }
+        new AlertDialog.Builder(this).setTitle("ロック画面で鳴らす設定")
+                .setMessage(message.toString())
+                .setPositiveButton("設定を開く", (dialog, which) -> {
+                    try { startActivity(settings); }
+                    catch (Exception e) { Toast.makeText(this, "設定画面を開けませんでした。権限と動作状況から設定してください", Toast.LENGTH_LONG).show(); }
+                }).setNegativeButton("あとで", null).show();
     }
 
     private void setSpinner(Spinner spinner, String[] labels) {

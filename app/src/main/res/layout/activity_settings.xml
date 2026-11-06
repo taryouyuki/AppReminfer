@@ -108,8 +108,8 @@
             app:cardElevation="0dp">
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
                 <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="合成音声の音量" android:textAppearance="?attr/textAppearanceTitleSmall" android:textColor="?attr/colorOnSurface" />
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Androidの通知音量を基準に、読み上げ音量を調整します。+3段階が初期値です。" android:textColor="?attr/colorOnSurfaceVariant" />
-                <TextView android:id="@+id/tv_tts_volume_offset" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="通知音量 +3段階" android:textColor="?attr/colorOnSurface" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Androidの通知音量を基準に、読み上げ音量を調整します。+5段階が初期値です。" android:textColor="?attr/colorOnSurfaceVariant" />
+                <TextView android:id="@+id/tv_tts_volume_offset" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="通知音量 +5段階" android:textColor="?attr/colorOnSurface" />
                 <SeekBar android:id="@+id/seek_tts_volume_offset" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="10" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -189,6 +189,7 @@
                 <Button android:id="@+id/btn_perm_exact" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="正確なアラームを許可" />
                 <Button android:id="@+id/btn_perm_notification" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="通知を許可" />
                 <Button android:id="@+id/btn_perm_fullscreen" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ロック画面に表示（全画面通知）を許可" />
+                <Button android:id="@+id/btn_perm_alarm_channel" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="アラーム通知の重要度・ロック画面表示を設定" />
                 <Button android:id="@+id/btn_perm_calendar" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="カレンダーを許可" />
                 <Button android:id="@+id/btn_perm_battery" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="電池の最適化を設定" />
                 <Button android:id="@+id/btn_permission_check" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="権限・省電力設定を確認" />

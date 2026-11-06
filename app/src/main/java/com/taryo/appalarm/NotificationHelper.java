@@ -25,6 +25,7 @@ public class NotificationHelper {
                     NotificationManager.IMPORTANCE_HIGH
             );
             alarmCh.enableVibration(true);
+            alarmCh.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
             nm.createNotificationChannel(alarmCh);
 
             NotificationChannel promptCh = new NotificationChannel(
@@ -99,6 +100,10 @@ public class NotificationHelper {
 
     public static void showFullScreenAlarm(Context context, AlarmEntry entry, int snoozesUsed) {
         createChannels(context);
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        boolean fullScreenAllowed = Build.VERSION.SDK_INT < 34 || nm == null || nm.canUseFullScreenIntent();
+        NotificationChannel channel = Build.VERSION.SDK_INT >= 26 && nm != null ? nm.getNotificationChannel(CHANNEL_ID_ALARM) : null;
+        boolean channelTooLow = channel != null && channel.getImportance() < NotificationManager.IMPORTANCE_HIGH;
         Intent wake = new Intent(context, WakeActivity.class);
         wake.putExtra("id", entry.id); wake.putExtra("pkg", entry.pkg); wake.putExtra("label", entry.label);
         wake.putExtra("alarmSoundUri", entry.alarmSoundUri); wake.putExtra("snoozesUsed", snoozesUsed);
@@ -112,12 +117,33 @@ public class NotificationHelper {
                 ? android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_ALARM)
                 : android.net.Uri.parse(entry.alarmSoundUri);
         VoiceAlarmService.playAlarmTone(context, entry.label, alarmUri, entry.volumePercent);
+        String body = "アラーム画面が開かない場合は下の「表示設定」を確認してください";
+        if (!fullScreenAllowed || channelTooLow) {
+            body = !fullScreenAllowed ? "全画面通知の許可を確認してください。タップして設定できます。"
+                    : "アラーム通知を「高」に設定してください。タップして設定できます。";
+        }
         NotificationCompat.Builder b = new NotificationCompat.Builder(context, CHANNEL_ID_ALARM)
                 .setSmallIcon(R.drawable.ic_tile_alarm).setContentTitle("アラーム: " + entry.label)
-                .setContentText("タップして停止またはスヌーズ").setCategory(NotificationCompat.CATEGORY_ALARM)
-                .setPriority(NotificationCompat.PRIORITY_MAX).setOngoing(true).setLocalOnly(!entry.watchEnabled).setSilent(true)
+                .setContentText(body).setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setPriority(NotificationCompat.PRIORITY_MAX).setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setOngoing(true).setLocalOnly(!entry.watchEnabled)
                 .setContentIntent(full).setFullScreenIntent(full, true);
-        android.app.NotificationManager nm = (android.app.NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
+        Intent settings;
+        if (!fullScreenAllowed) {
+            settings = new Intent(android.provider.Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT,
+                    android.net.Uri.parse("package:" + context.getPackageName()));
+        } else if (channel != null && Build.VERSION.SDK_INT >= 26) {
+            settings = new Intent(android.provider.Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS);
+            settings.putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.getPackageName());
+            settings.putExtra(android.provider.Settings.EXTRA_CHANNEL_ID, CHANNEL_ID_ALARM);
+        } else {
+            settings = new Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+            settings.putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.getPackageName());
+        }
+        settings.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        PendingIntent settingsPi = PendingIntent.getActivity(context, entry.id + 180000, settings,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        b.addAction(R.drawable.ic_tile_alarm, "表示設定を開く", settingsPi);
         if (nm != null) nm.notify(entry.id, b.build());
     }
 }

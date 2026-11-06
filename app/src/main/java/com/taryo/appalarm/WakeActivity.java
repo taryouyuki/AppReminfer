@@ -46,6 +46,7 @@ public class WakeActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true);
             setTurnScreenOn(true);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         } else {
             getWindow().addFlags(
                     WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED

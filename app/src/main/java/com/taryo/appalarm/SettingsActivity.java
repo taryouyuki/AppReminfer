@@ -50,6 +50,7 @@ public class SettingsActivity extends AppCompatActivity {
         findViewById(R.id.btn_perm_exact).setOnClickListener(v -> openPermission(0));
         findViewById(R.id.btn_perm_notification).setOnClickListener(v -> openPermission(1));
         findViewById(R.id.btn_perm_fullscreen).setOnClickListener(v -> openPermission(2));
+        findViewById(R.id.btn_perm_alarm_channel).setOnClickListener(v -> openPermission(6));
         findViewById(R.id.btn_perm_calendar).setOnClickListener(v -> openPermission(4));
         findViewById(R.id.btn_perm_battery).setOnClickListener(v -> openPermission(3));
 
@@ -135,7 +136,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         android.widget.SeekBar seekTtsOffset = findViewById(R.id.seek_tts_volume_offset);
         TextView tvTtsOffset = findViewById(R.id.tv_tts_volume_offset);
-        int ttsOffset = Math.max(-5, Math.min(5, prefs.getInt("tts_volume_offset_steps", 3)));
+        int ttsOffset = VoiceAlarmService.getTtsVolumeOffset(this);
         seekTtsOffset.setProgress(ttsOffset + 5);
         tvTtsOffset.setText("通知音量 " + (ttsOffset > 0 ? "+" : "") + ttsOffset + "段階");
         seekTtsOffset.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
@@ -234,10 +235,15 @@ public class SettingsActivity extends AppCompatActivity {
         NotificationManager nm = getSystemService(NotificationManager.class);
         boolean full = Build.VERSION.SDK_INT < 34 || (nm != null && nm.canUseFullScreenIntent());
         boolean calendar = checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED;
+        String alarmChannel = "Android 8未満";
+        if (Build.VERSION.SDK_INT >= 26 && nm != null) {
+            android.app.NotificationChannel channel = nm.getNotificationChannel(NotificationHelper.CHANNEL_ID_ALARM);
+            alarmChannel = channel == null ? "未作成" : (channel.getImportance() >= NotificationManager.IMPORTANCE_HIGH ? "高（全画面表示に対応）" : "低（高に変更が必要）");
+        }
         PowerManager power = getSystemService(PowerManager.class);
         boolean unrestricted = power != null && power.isIgnoringBatteryOptimizations(getPackageName());
         tvPermissionStatus.setText("通知: " + status(notification) + "\n正確なアラーム: " + status(exact)
-                + "\nロック中の全画面表示: " + status(full) + "\n他アプリの上に表示: アラームには不要\nカレンダー: " + status(calendar)
+                + "\nロック中の全画面表示: " + status(full) + "\nアラーム通知の重要度: " + alarmChannel + "\n他アプリの上に表示: アラームには不要\nカレンダー: " + status(calendar)
                 + "\n電池最適化の対象外: " + status(unrestricted));
     }
 
@@ -272,6 +278,11 @@ public class SettingsActivity extends AppCompatActivity {
         else if (which == 2 && Build.VERSION.SDK_INT >= 34) intent = new Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, Uri.parse("package:" + getPackageName()));
         else if (which == 3) intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
         else if (which == 4) { Toast.makeText(this, "カレンダー権限は許可済みです", Toast.LENGTH_SHORT).show(); return; }
+        else if (which == 6 && Build.VERSION.SDK_INT >= 26) {
+            intent = new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS);
+            intent.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+            intent.putExtra(Settings.EXTRA_CHANNEL_ID, NotificationHelper.CHANNEL_ID_ALARM);
+        }
         else intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()));
         try { startActivity(intent); } catch (Exception e) { Toast.makeText(this, "この設定画面を開けませんでした", Toast.LENGTH_SHORT).show(); }
     }

@@ -15,6 +15,9 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.EditText;
+import android.widget.Toast;
+import android.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.text.SimpleDateFormat;
@@ -30,6 +33,9 @@ public class WakeActivity extends AppCompatActivity {
     private String pkg;
     private String label;
     private int snoozesUsed;
+    private boolean challengeEnabled;
+    private int challengeType;
+    private String qrValue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +61,9 @@ public class WakeActivity extends AppCompatActivity {
         pkg = intent.getStringExtra("pkg");
         label = intent.getStringExtra("label");
         snoozesUsed = intent.getIntExtra("snoozesUsed", 0);
+        challengeEnabled = intent.getBooleanExtra("challengeEnabled", false);
+        challengeType = intent.getIntExtra("challengeType", 0);
+        qrValue = intent.getStringExtra("challengeQrValue");
 
         TextView tvTime = findViewById(R.id.wake_time);
         TextView tvTitle = findViewById(R.id.wake_title);
@@ -79,10 +88,10 @@ public class WakeActivity extends AppCompatActivity {
         btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (challengeEnabled) { runChallenge(); return; }
                 stopSound();
-                android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                if (nm != null) nm.cancel(alarmId + 120000);
-                HistoryRecord.record(WakeActivity.this, label, HistoryRecord.ACTION_STOP);
+                cancelAlarmNotification();
+                HistoryRecord.record(WakeActivity.this, label, HistoryRecord.ACTION_STOP, alarmId);
                 if (pkg != null && !pkg.isEmpty()) {
                     Intent launch = getPackageManager().getLaunchIntentForPackage(pkg);
                     if (launch != null) {
@@ -93,10 +102,8 @@ public class WakeActivity extends AppCompatActivity {
             }
         });
 
-        int configuredMax = getIntent().getIntExtra("maxSnooze", -1);
-        int configuredMin = getIntent().getIntExtra("snoozeMinutes", -1);
-        int maxSnooze = configuredMax != -1 ? configuredMax : prefs.getInt("default_max_snooze", 3);
-        int snoozeMin = configuredMin > 0 ? configuredMin : prefs.getInt("default_snooze_min", 5);
+        int maxSnooze = prefs.getInt("default_max_snooze", 3);
+        int snoozeMin = prefs.getInt("default_snooze_min", 5);
         if (maxSnooze == -2 || (maxSnooze > 0 && snoozesUsed >= maxSnooze)) {
             btnSnooze.setVisibility(View.GONE);
         } else {
@@ -105,9 +112,8 @@ public class WakeActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     stopSound();
-                    android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                    if (nm != null) nm.cancel(alarmId + 120000);
-                    HistoryRecord.record(WakeActivity.this, label, HistoryRecord.ACTION_SNOOZE);
+                    cancelAlarmNotification();
+                    HistoryRecord.record(WakeActivity.this, label, HistoryRecord.ACTION_SNOOZE, alarmId);
                     Intent snoozeIntent = new Intent(WakeActivity.this, AlarmReceiver.class);
                     snoozeIntent.setAction(AlarmReceiver.ACTION_SNOOZE);
                     snoozeIntent.putExtra("id", alarmId);
@@ -120,9 +126,46 @@ public class WakeActivity extends AppCompatActivity {
         }
     }
 
+    private void runChallenge() {
+        if (challengeType == 1) {
+            try {
+                Intent scan = new Intent("com.google.zxing.client.android.SCAN");
+                scan.putExtra("SCAN_MODE", "QR_CODE_MODE");
+                startActivityForResult(scan, 512);
+            } catch (Exception e) {
+                Toast.makeText(this, "ZXing Barcode ScannerをインストールしてからQRチャレンジを利用してください", Toast.LENGTH_LONG).show();
+            }
+            return;
+        }
+        int a = 12 + (alarmId % 17), b = 3 + (alarmId % 9);
+        EditText answer = new EditText(this); answer.setInputType(2);
+        new AlertDialog.Builder(this).setTitle("停止チャレンジ").setMessage(a + " + " + b + " = ?").setView(answer)
+                .setPositiveButton("回答", (d, w) -> {
+                    try { if (Integer.parseInt(answer.getText().toString()) == a + b) dismissAfterChallenge(); else Toast.makeText(this, "答えが違います", Toast.LENGTH_SHORT).show(); }
+                    catch (Exception e) { Toast.makeText(this, "数字を入力してください", Toast.LENGTH_SHORT).show(); }
+                }).setNegativeButton("戻る", null).show();
+    }
+
+    private void dismissAfterChallenge() {
+        stopSound(); HistoryRecord.record(this, label, HistoryRecord.ACTION_STOP, alarmId);
+        cancelAlarmNotification();
+        if (pkg != null && !pkg.isEmpty()) { Intent launch = getPackageManager().getLaunchIntentForPackage(pkg); if (launch != null) startActivity(launch); }
+        finish();
+    }
+
+    @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 512 && resultCode == RESULT_OK && data != null) {
+            String scanned = data.getStringExtra("SCAN_RESULT");
+            if (qrValue == null || qrValue.isEmpty() || qrValue.equals(scanned)) dismissAfterChallenge();
+            else Toast.makeText(this, "登録したQRコードと一致しません", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void startAlarmSound(boolean fadeEnabled, int fadeSeconds) {
         try {
-            Uri alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+            String customUri = getIntent().getStringExtra("alarmSoundUri");
+            Uri alert = (customUri != null && !customUri.isEmpty()) ? Uri.parse(customUri) : RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
             if (alert == null) {
                 alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
             }
@@ -134,6 +177,7 @@ public class WakeActivity extends AppCompatActivity {
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                     .build());
             mediaPlayer.setLooping(true);
+            float targetVolume = Math.max(0f, Math.min(1f, getIntent().getIntExtra("volumePercent", 100) / 100f));
 
             if (fadeEnabled) {
                 // 小さい音量(0.05)からスタート
@@ -141,7 +185,7 @@ public class WakeActivity extends AppCompatActivity {
                 mediaPlayer.prepare();
                 mediaPlayer.start();
 
-                fadeAnimator = ValueAnimator.ofFloat(0.05f, 1.0f);
+                fadeAnimator = ValueAnimator.ofFloat(0.05f, targetVolume);
                 fadeAnimator.setDuration(fadeSeconds * 1000L);
                 fadeAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                     @Override
@@ -155,6 +199,7 @@ public class WakeActivity extends AppCompatActivity {
                 fadeAnimator.start();
             } else {
                 mediaPlayer.prepare();
+                mediaPlayer.setVolume(targetVolume, targetVolume);
                 mediaPlayer.start();
             }
         } catch (Exception e) {
@@ -192,6 +237,11 @@ public class WakeActivity extends AppCompatActivity {
             }
             vibrator = null;
         }
+    }
+
+    private void cancelAlarmNotification() {
+        android.app.NotificationManager nm = (android.app.NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+        if (nm != null) nm.cancel(alarmId);
     }
 
     @Override

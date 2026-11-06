@@ -38,30 +38,6 @@
             android:textColor="?attr/colorPrimary" />
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="8dp">
-        <EditText
-            android:id="@+id/edit_search_apps"
-            android:layout_width="0dp"
-            android:layout_height="56dp"
-            android:layout_weight="1"
-            android:hint="アプリ名で検索"
-            android:singleLine="true"
-            android:inputType="text"
-            android:textSize="16sp"
-            android:padding="12dp" />
-        <Spinner
-            android:id="@+id/spinner_sort"
-            android:layout_width="wrap_content"
-            android:layout_height="56dp" />
-    </LinearLayout>
-
     <HorizontalScrollView
         android:id="@+id/scroll_groups"
         android:layout_width="match_parent"

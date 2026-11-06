@@ -14,7 +14,7 @@ public class NextTime {
             Calendar candidate = Calendar.getInstance();
             candidate.set(entry.year, entry.month - 1, entry.day, entry.hour, entry.minute, 0);
             candidate.set(Calendar.MILLISECOND, 0);
-            if (candidate.getTimeInMillis() <= nowMillis || candidate.getTimeInMillis() == entry.skipAt) return 0;
+            if (candidate.getTimeInMillis() <= nowMillis) return 0;
             if (entry.skipHolidays && JapaneseHolidays.isHoliday(candidate)) return 0;
             return candidate.getTimeInMillis();
         }
@@ -34,7 +34,7 @@ public class NextTime {
                     Calendar candidate = (Calendar) cur.clone();
                     candidate.set(Calendar.HOUR_OF_DAY, h);
                     candidate.set(Calendar.MINUTE, m);
-                    if (candidate.getTimeInMillis() > nowMillis && candidate.getTimeInMillis() != entry.skipAt) {
+                    if (candidate.getTimeInMillis() > nowMillis) {
                         if (!entry.skipHolidays || !JapaneseHolidays.isHoliday(candidate)) {
                             return candidate.getTimeInMillis();
                         }
@@ -53,7 +53,7 @@ public class NextTime {
         cur.set(Calendar.MILLISECOND, 0);
 
         for (int i = 0; i <= 400; i++) {
-            if (cur.getTimeInMillis() > nowMillis && cur.getTimeInMillis() != entry.skipAt) {
+            if (cur.getTimeInMillis() > nowMillis) {
                 boolean match = true;
                 if (entry.mode == AlarmEntry.MODE_WEEKLY) {
                     int dayOfWeek = cur.get(Calendar.DAY_OF_WEEK);

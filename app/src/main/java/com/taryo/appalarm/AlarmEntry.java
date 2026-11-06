@@ -52,10 +52,20 @@ public class AlarmEntry {
     // Snooze
     public int snoozeMinutes = -1; // -1 = default
     public int maxSnooze = -1;
-    public long skipAt = 0;
 
     // NEW: グループ / タグ整理 ("朝", "仕事", "夜", etc.)
     public String group = "";
+
+    // Optional per-alarm enhancements (false keeps legacy behavior).
+    public boolean challengeEnabled = false;
+    public int challengeType = 0; // 0 math, 1 QR
+    public String challengeQrValue = "";
+    public int volumePercent = 100;
+    public boolean progressiveEnabled = false;
+    public boolean calendarEnabled = false;
+    public boolean cloudBackupEnabled = false;
+    public boolean watchEnabled = false;
+    public boolean analyticsEnabled = true;
 
     public JSONObject toJsonObject() throws JSONException {
         JSONObject obj = new JSONObject();
@@ -89,8 +99,16 @@ public class AlarmEntry {
         obj.put("voiceText", voiceText);
         obj.put("snoozeMinutes", snoozeMinutes);
         obj.put("maxSnooze", maxSnooze);
-        obj.put("skipAt", skipAt);
         obj.put("group", group != null ? group : "");
+        obj.put("challengeEnabled", challengeEnabled);
+        obj.put("challengeType", challengeType);
+        obj.put("challengeQrValue", challengeQrValue);
+        obj.put("volumePercent", volumePercent);
+        obj.put("progressiveEnabled", progressiveEnabled);
+        obj.put("calendarEnabled", calendarEnabled);
+        obj.put("cloudBackupEnabled", cloudBackupEnabled);
+        obj.put("watchEnabled", watchEnabled);
+        obj.put("analyticsEnabled", analyticsEnabled);
         return obj;
     }
 
@@ -126,8 +144,16 @@ public class AlarmEntry {
         e.voiceText = obj.optString("voiceText", "");
         e.snoozeMinutes = obj.optInt("snoozeMinutes", -1);
         e.maxSnooze = obj.optInt("maxSnooze", -1);
-        e.skipAt = obj.optLong("skipAt", 0);
         e.group = obj.optString("group", "");
+        e.challengeEnabled = obj.optBoolean("challengeEnabled", false);
+        e.challengeType = obj.optInt("challengeType", 0);
+        e.challengeQrValue = obj.optString("challengeQrValue", "");
+        e.volumePercent = Math.max(0, Math.min(100, obj.optInt("volumePercent", 100)));
+        e.progressiveEnabled = obj.optBoolean("progressiveEnabled", false);
+        e.calendarEnabled = obj.optBoolean("calendarEnabled", false);
+        e.cloudBackupEnabled = obj.optBoolean("cloudBackupEnabled", false);
+        e.watchEnabled = obj.optBoolean("watchEnabled", false);
+        e.analyticsEnabled = obj.optBoolean("analyticsEnabled", true);
         return e;
     }
 

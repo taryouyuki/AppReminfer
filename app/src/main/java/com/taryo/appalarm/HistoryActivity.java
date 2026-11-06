@@ -89,7 +89,17 @@ public class HistoryActivity extends AppCompatActivity {
         tvSnoozed.setText(String.valueOf(stats.get("snooze")));
 
         String insight = HistoryRecord.findMostSnoozedAlarm(records);
-        tvInsight.setText(insight);
+        java.util.Calendar c = java.util.Calendar.getInstance();
+        int[] snoozeByHour = new int[24], triggersByDay = new int[7], snoozeByDay = new int[7];
+        for (HistoryRecord r : records) { c.setTimeInMillis(r.timestamp); int h=c.get(java.util.Calendar.HOUR_OF_DAY), d=(c.get(java.util.Calendar.DAY_OF_WEEK)+5)%7;
+            if (HistoryRecord.ACTION_NOTIFY.equals(r.action)) triggersByDay[d]++;
+            if (HistoryRecord.ACTION_SNOOZE.equals(r.action)) { snoozeByHour[h]++; snoozeByDay[d]++; }
+        }
+        int worstHour=0, worstDay=0; for(int i=1;i<24;i++) if(snoozeByHour[i]>snoozeByHour[worstHour]) worstHour=i;
+        for(int i=1;i<7;i++) if(triggersByDay[i]>0 && (triggersByDay[worstDay]==0 || snoozeByDay[i]*1f/triggersByDay[i]>snoozeByDay[worstDay]*1f/triggersByDay[worstDay])) worstDay=i;
+        String[] days={"月","火","水","木","金","土","日"};
+        String dayInsight = triggersByDay[worstDay]==0 ? "曜日別分析: まだ記録がありません" : "曜日別: "+days[worstDay]+"曜のスヌーズ率 "+(100*snoozeByDay[worstDay]/triggersByDay[worstDay])+"%";
+        tvInsight.setText(insight+"\n"+dayInsight+"\n時間帯: "+String.format(java.util.Locale.JAPAN,"%02d時台",worstHour)+"が最多スヌーズ ("+snoozeByHour[worstHour]+"回)");
     }
 
     private class HistoryAdapter extends BaseAdapter {

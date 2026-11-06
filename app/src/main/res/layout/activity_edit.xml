@@ -157,31 +157,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:layout_marginTop="4dp" />
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="曜日を選択（複数選択できます）"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginTop="8dp" />
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-                    <CheckBox android:id="@+id/day_mon" android:layout_width="wrap_content" android:layout_height="48dp" android:text="月" />
-                    <CheckBox android:id="@+id/day_tue" android:layout_width="wrap_content" android:layout_height="48dp" android:text="火" />
-                    <CheckBox android:id="@+id/day_wed" android:layout_width="wrap_content" android:layout_height="48dp" android:text="水" />
-                    <CheckBox android:id="@+id/day_thu" android:layout_width="wrap_content" android:layout_height="48dp" android:text="木" />
-                    <CheckBox android:id="@+id/day_fri" android:layout_width="wrap_content" android:layout_height="48dp" android:text="金" />
-                    <CheckBox android:id="@+id/day_sat" android:layout_width="wrap_content" android:layout_height="48dp" android:text="土" />
-                    <CheckBox android:id="@+id/day_sun" android:layout_width="wrap_content" android:layout_height="48dp" android:text="日" />
-                </LinearLayout>
-                <DatePicker
-                    android:id="@+id/picker_alarm_date"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:calendarViewShown="false"
-                    android:datePickerMode="spinner" />
                 <CheckBox
                     android:id="@+id/cb_skip_holidays"
                     android:layout_width="match_parent"
@@ -189,36 +164,6 @@
                     android:minHeight="48dp"
                     android:text="日本の祝日はスキップする"
                     android:textColor="?attr/colorOnSurface" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.Material3.CardView.Filled"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            app:cardBackgroundColor="?attr/colorSurfaceContainer"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="0dp">
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="通知方法" android:textSize="18sp" android:textStyle="bold" />
-                <Spinner android:id="@+id/spinner_sound_mode" android:layout_width="match_parent"
-                    android:layout_height="56dp" />
-                <EditText android:id="@+id/edit_voice_text" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:hint="読み上げる文章" android:minHeight="56dp"
-                    android:textSize="16sp" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="このアラームの再通知（未設定なら全体設定を使用）"
-                    android:textSize="15sp" android:layout_marginTop="8dp" />
-                <Spinner android:id="@+id/spinner_alarm_snooze_min" android:layout_width="match_parent"
-                    android:layout_height="52dp" />
-                <Spinner android:id="@+id/spinner_alarm_snooze_max" android:layout_width="match_parent"
-                    android:layout_height="52dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -257,6 +202,26 @@
                     android:minHeight="48dp"
                     android:text="アラーム鳴動モード（全画面＋停止／スヌーズ）"
                     android:textColor="?attr/colorOnSurface" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.Material3.CardView.Filled"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="?attr/colorSurfaceContainer" app:cardCornerRadius="20dp" app:cardElevation="0dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="アラームごとの追加機能" android:textAppearance="?attr/textAppearanceTitleSmall" android:textColor="?attr/colorOnSurface" />
+                <CheckBox android:id="@+id/cb_challenge" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="停止チャレンジ（計算問題）" />
+                <CheckBox android:id="@+id/cb_qr_challenge" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="QRコードを読んで停止（ZXingアプリが必要）" />
+                <EditText android:id="@+id/edit_qr_value" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="照合するQR内容（空欄なら任意のQR）" android:inputType="text" />
+                <TextView android:id="@+id/tv_volume" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="音量: 100%" android:textColor="?attr/colorOnSurface" />
+                <SeekBar android:id="@+id/seek_volume" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" />
+                <CheckBox android:id="@+id/cb_progressive" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="段階的に再通知間隔を延長" />
+                <CheckBox android:id="@+id/cb_calendar" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="カレンダー予定からリマインダー作成を許可" />
+                <CheckBox android:id="@+id/cb_cloud_backup" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="クラウド保存対象に含める" />
+                <CheckBox android:id="@+id/cb_watch" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="スマートウォッチにも通知" />
+                <CheckBox android:id="@+id/cb_analytics" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="曜日・時間帯分析に含める" />
+                <Button android:id="@+id/btn_calendar_import" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="カレンダー予定をリマインダーに追加" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

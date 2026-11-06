@@ -27,12 +27,20 @@ public class WidgetProvider extends AppWidgetProvider {
         super.onReceive(context, intent);
 
         if (ACTION_TOGGLE_NEXT.equals(intent.getAction())) {
-            // 次回の1回だけスキップ。アラーム自体は有効のまま次回分を予約する
+            // ホーム画面ウィジェットから即ON/OFF切り替え
             SharedPreferences prefs = context.getSharedPreferences("appalarm_prefs", Context.MODE_PRIVATE);
             List<AlarmEntry> list = AlarmEntry.loadAll(prefs);
             AlarmEntry next = findNext(list);
-            if (next != null) {
-                next.skipAt = NextTime.nextTrigger(next, System.currentTimeMillis());
+
+            if (next != null && next.enabled) {
+                next.enabled = false;
+            } else {
+                for (AlarmEntry e : list) {
+                    if (!e.enabled) {
+                        e.enabled = true;
+                        break;
+                    }
+                }
             }
             AlarmEntry.saveAll(prefs, list);
             AlarmReceiver.rescheduleAll(context, list);
@@ -51,7 +59,7 @@ public class WidgetProvider extends AppWidgetProvider {
         if (next != null && next.enabled) {
             views.setTextViewText(R.id.widget_time, NextTime.timeText(next));
             views.setTextViewText(R.id.widget_label, next.label);
-            views.setTextViewText(R.id.widget_btn_toggle, "次回をスキップ");
+            views.setTextViewText(R.id.widget_btn_toggle, "ON (タップでOFF)");
 
             // タップでアプリ起動
             Intent openIntent = context.getPackageManager().getLaunchIntentForPackage(next.pkg);
@@ -63,7 +71,7 @@ public class WidgetProvider extends AppWidgetProvider {
         } else {
             views.setTextViewText(R.id.widget_time, "--:--");
             views.setTextViewText(R.id.widget_label, "アラームなし");
-            views.setTextViewText(R.id.widget_btn_toggle, "アラームなし");
+            views.setTextViewText(R.id.widget_btn_toggle, "OFF (タップでON)");
 
             Intent mainIntent = new Intent(context, MainActivity.class);
             PendingIntent pi = PendingIntent.getActivity(context, 0, mainIntent,

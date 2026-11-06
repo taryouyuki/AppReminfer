@@ -12,8 +12,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
+import android.net.Uri;
+import android.provider.DocumentsContract;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import org.json.JSONObject;
 
 public class SettingsActivity extends AppCompatActivity {
+    private static final int REQ_EXPORT = 801, REQ_IMPORT = 802;
+    private SharedPreferences backupPrefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,41 +31,7 @@ public class SettingsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_settings);
 
         final SharedPreferences prefs = getSharedPreferences("appalarm_prefs", MODE_PRIVATE);
-        Button notificationSettings = findViewById(R.id.btn_notification_settings);
-        notificationSettings.setOnClickListener(v -> {
-            try {
-                Intent intent = new Intent(android.provider.Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS);
-                intent.putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, getPackageName());
-                intent.putExtra(android.provider.Settings.EXTRA_CHANNEL_ID, NotificationHelper.CHANNEL_ID_PROMPT);
-                startActivity(intent);
-            } catch (Exception ignored) {
-                startActivity(new Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                        .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, getPackageName()));
-            }
-        });
-        Button fullScreenSettings = findViewById(R.id.btn_fullscreen_settings);
-        fullScreenSettings.setOnClickListener(v -> {
-            if (android.os.Build.VERSION.SDK_INT >= 34) {
-                try {
-                    startActivity(new Intent(android.provider.Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT)
-                            .setData(android.net.Uri.parse("package:" + getPackageName())));
-                } catch (Exception ignored) {}
-            } else {
-                Toast.makeText(this, "Android 14以降で必要な設定です", Toast.LENGTH_SHORT).show();
-            }
-        });
-        Button exactSettings = findViewById(R.id.btn_exact_alarm_settings);
-        exactSettings.setOnClickListener(v -> {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                try {
-                    Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
-                    intent.setData(android.net.Uri.parse("package:" + getPackageName()));
-                    startActivity(intent);
-                } catch (Exception ignored) {}
-            } else {
-                Toast.makeText(this, "このAndroidバージョンでは個別の許可画面はありません", Toast.LENGTH_SHORT).show();
-            }
-        });
+        backupPrefs = prefs;
 
         // 0. システムカラー (Material You / Dynamic Colors) 設定
         SwitchCompat switchDynamicColor = findViewById(R.id.switch_dynamic_color);
@@ -207,30 +182,33 @@ public class SettingsActivity extends AppCompatActivity {
         Button btnExport = findViewById(R.id.btn_export_backup);
         Button btnImport = findViewById(R.id.btn_import_backup);
 
-        btnExport.setOnClickListener(v -> {
-            String json = prefs.getString("alarm_list_json", "[]");
-            android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-            if (cm != null) {
-                cm.setPrimaryClip(android.content.ClipData.newPlainText("appalarm_backup", json));
-                Toast.makeText(SettingsActivity.this, "設定JSONをクリップボードにコピーしました", Toast.LENGTH_SHORT).show();
-            }
-        });
+        btnExport.setOnClickListener(v -> { Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT); i.setType("application/json"); i.putExtra(Intent.EXTRA_TITLE, "app-remind-backup.json"); i.addCategory(Intent.CATEGORY_OPENABLE); startActivityForResult(i, REQ_EXPORT); });
+        btnImport.setOnClickListener(v -> { Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT); i.setType("application/json"); i.addCategory(Intent.CATEGORY_OPENABLE); startActivityForResult(i, REQ_IMPORT); });
+    }
 
-        btnImport.setOnClickListener(v -> {
-            android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-            if (cm != null && cm.hasPrimaryClip() && cm.getPrimaryClip().getItemCount() > 0) {
-                CharSequence text = cm.getPrimaryClip().getItemAt(0).getText();
-                if (text != null && text.length() > 0) {
-                    try {
-                        new org.json.JSONArray(text.toString());
-                        prefs.edit().putString("alarm_list_json", text.toString()).apply();
-                        Toast.makeText(SettingsActivity.this, "クリップボードの設定から復元しました", Toast.LENGTH_SHORT).show();
-                        AlarmReceiver.rescheduleAll(SettingsActivity.this, AlarmEntry.loadAll(prefs));
-                    } catch (Exception e) {
-                        Toast.makeText(SettingsActivity.this, "クリップボードのJSON形式が不正です", Toast.LENGTH_SHORT).show();
-                    }
-                }
+    @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data); if (resultCode != RESULT_OK || data == null || data.getData() == null) return;
+        Uri uri = data.getData();
+        try {
+            if (requestCode == REQ_EXPORT) {
+                JSONObject root = new JSONObject(); root.put("format", "app-remind-backup-v1");
+                JSONObject values = new JSONObject();
+                for (String key : backupPrefs.getAll().keySet()) values.put(key, backupPrefs.getAll().get(key));
+                org.json.JSONArray selectedAlarms = new org.json.JSONArray();
+                for (AlarmEntry alarm : AlarmEntry.loadAll(backupPrefs)) if (alarm.cloudBackupEnabled) selectedAlarms.put(alarm.toJsonObject());
+                values.put("alarm_list_json", selectedAlarms.toString());
+                root.put("preferences", values);
+                try (OutputStream out = getContentResolver().openOutputStream(uri)) { out.write(root.toString(2).getBytes(StandardCharsets.UTF_8)); }
+                Toast.makeText(this, "バックアップを書き出しました", Toast.LENGTH_SHORT).show();
+            } else if (requestCode == REQ_IMPORT) {
+                ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+                try (InputStream in = getContentResolver().openInputStream(uri)) { byte[] buf = new byte[4096]; int n; while ((n = in.read(buf)) > 0) bytes.write(buf, 0, n); }
+                JSONObject root = new JSONObject(bytes.toString("UTF-8")); JSONObject values = root.getJSONObject("preferences");
+                SharedPreferences.Editor ed = backupPrefs.edit(); ed.clear();
+                for (java.util.Iterator<String> it = values.keys(); it.hasNext();) { String k = it.next(); Object val = values.get(k); if (val instanceof Boolean) ed.putBoolean(k, (Boolean) val); else if (val instanceof Integer) ed.putInt(k, (Integer) val); else if (val instanceof Long) ed.putLong(k, (Long) val); else if (val instanceof String) ed.putString(k, (String) val); }
+                ed.apply(); AlarmReceiver.rescheduleAll(this, AlarmEntry.loadAll(backupPrefs));
+                Toast.makeText(this, "バックアップを復元しました", Toast.LENGTH_SHORT).show();
             }
-        });
+        } catch (Exception e) { Toast.makeText(this, "ファイルを読み書きできません: " + e.getMessage(), Toast.LENGTH_LONG).show(); }
     }
 }

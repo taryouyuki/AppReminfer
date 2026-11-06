@@ -6,8 +6,11 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Build;
-import android.app.AlarmManager;
 import android.provider.Settings;
+import android.net.Uri;
+import android.Manifest;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import android.widget.ImageView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,11 +19,6 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.EditText;
-import android.widget.Spinner;
-import android.widget.ArrayAdapter;
-import java.text.Collator;
-import java.util.Locale;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import com.google.android.material.chip.Chip;
@@ -40,8 +38,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvNextSummary;
     private String selectedTag = null; // null = all
     private String appliedThemeKey;
-    private String searchQuery = "";
-    private boolean sortAscending = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,27 +55,6 @@ public class MainActivity extends AppCompatActivity {
         Button btnAdd = findViewById(R.id.btn_add_alarm);
         Button btnHistory = findViewById(R.id.btn_history);
         Button btnSettings = findViewById(R.id.btn_settings);
-        EditText search = findViewById(R.id.edit_search_apps);
-        Spinner sort = findViewById(R.id.spinner_sort);
-        ArrayAdapter<String> sortAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, new String[]{"名前順 あ→ん / A→Z", "名前順 Z→A"});
-        sortAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        sort.setAdapter(sortAdapter);
-        search.addTextChangedListener(new android.text.TextWatcher() {
-            public void beforeTextChanged(CharSequence s, int st, int count, int after) {}
-            public void onTextChanged(CharSequence s, int st, int before, int count) {
-                searchQuery = s.toString().trim();
-                applyFilter();
-            }
-            public void afterTextChanged(android.text.Editable e) {}
-        });
-        sort.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
-            public void onItemSelected(android.widget.AdapterView<?> p, View v, int pos, long id) {
-                sortAscending = pos == 0;
-                applyFilter();
-            }
-            public void onNothingSelected(android.widget.AdapterView<?> p) {}
-        });
 
         adapter = new AlarmAdapter();
         listView.setAdapter(adapter);
@@ -107,6 +82,29 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void requestAlarmPermissions() {
+        if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 410);
+            return;
+        }
+        requestExactAlarmPermission();
+    }
+
+    private void requestExactAlarmPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            android.app.AlarmManager am = getSystemService(android.app.AlarmManager.class);
+            if (am != null && !am.canScheduleExactAlarms()) {
+                try { startActivity(new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:" + getPackageName()))); }
+                catch (Exception ignored) { }
+            }
+        }
+    }
+
+    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 410) requestExactAlarmPermission();
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -115,6 +113,10 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         loadAlarmsAndRefresh();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            android.app.AlarmManager am = getSystemService(android.app.AlarmManager.class);
+            if (am != null && am.canScheduleExactAlarms()) AlarmReceiver.rescheduleAll(this, AlarmEntry.loadAll(getSharedPreferences("appalarm_prefs", MODE_PRIVATE)));
+        }
     }
 
     private void loadAlarmsAndRefresh() {
@@ -171,41 +173,16 @@ public class MainActivity extends AppCompatActivity {
 
     private void applyFilter() {
         displayedAlarms.clear();
-        for (AlarmEntry a : allAlarms) {
-            boolean tagMatch = selectedTag == null || selectedTag.equals(a.group);
-            String name = a.label == null ? "" : a.label;
-            boolean textMatch = searchQuery.isEmpty() || name.toLowerCase(Locale.ROOT)
-                    .contains(searchQuery.toLowerCase(Locale.ROOT));
-            if (tagMatch && textMatch) displayedAlarms.add(a);
+        if (selectedTag == null) {
+            displayedAlarms.addAll(allAlarms);
+        } else {
+            for (AlarmEntry a : allAlarms) {
+                if (selectedTag.equals(a.group)) {
+                    displayedAlarms.add(a);
+                }
+            }
         }
-        Collator collator = Collator.getInstance(Locale.JAPANESE);
-        displayedAlarms.sort((a, b) -> {
-            String left = a.label == null ? "" : a.label;
-            String right = b.label == null ? "" : b.label;
-            int leftGroup = sortGroup(left), rightGroup = sortGroup(right);
-            int result = Integer.compare(leftGroup, rightGroup);
-            if (result == 0) result = collator.compare(toHiragana(left), toHiragana(right));
-            return sortAscending ? result : -result;
-        });
         adapter.notifyDataSetChanged();
-    }
-
-    private int sortGroup(String value) {
-        if (value == null || value.isEmpty()) return 2;
-        char c = toHiragana(value).charAt(0);
-        if ((c >= '\u3040' && c <= '\u309F') || (c >= '\u30A0' && c <= '\u30FF')) return 0;
-        if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) return 1;
-        return 2;
-    }
-
-    private String toHiragana(String value) {
-        StringBuilder out = new StringBuilder();
-        for (int i = 0; i < value.length(); i++) {
-            char c = value.charAt(i);
-            if (c >= '\u30A1' && c <= '\u30F6') c = (char) (c - 0x60);
-            out.append(c);
-        }
-        return out.toString();
     }
 
     private void updateNextSummary() {

@@ -20,11 +20,16 @@ public class HistoryRecord {
     public long timestamp;
     public String label = "";
     public String action = ACTION_STOP;
+    public int alarmId = -1;
 
     public HistoryRecord(long timestamp, String label, String action) {
+        this(timestamp, label, action, -1);
+    }
+    public HistoryRecord(long timestamp, String label, String action, int alarmId) {
         this.timestamp = timestamp;
         this.label = label != null ? label : "";
         this.action = action != null ? action : ACTION_STOP;
+        this.alarmId = alarmId;
     }
 
     public JSONObject toJsonObject() throws JSONException {
@@ -32,6 +37,7 @@ public class HistoryRecord {
         obj.put("timestamp", timestamp);
         obj.put("label", label);
         obj.put("action", action);
+        obj.put("alarmId", alarmId);
         return obj;
     }
 
@@ -39,17 +45,24 @@ public class HistoryRecord {
         return new HistoryRecord(
                 obj.optLong("timestamp", System.currentTimeMillis()),
                 obj.optString("label", ""),
-                obj.optString("action", ACTION_STOP)
+                obj.optString("action", ACTION_STOP), obj.optInt("alarmId", -1)
         );
     }
 
     public static void record(Context context, String label, String action) {
+        record(context, label, action, -1);
+    }
+
+    public static void record(Context context, String label, String action, int alarmId) {
         SharedPreferences prefs = context.getSharedPreferences("appalarm_prefs", Context.MODE_PRIVATE);
         boolean enabled = prefs.getBoolean("history_enabled", true);
         if (!enabled) return;
+        if (alarmId >= 0) {
+            for (AlarmEntry entry : AlarmEntry.loadAll(prefs)) if (entry.id == alarmId && !entry.analyticsEnabled) return;
+        }
 
         List<HistoryRecord> list = loadAll(prefs);
-        list.add(0, new HistoryRecord(System.currentTimeMillis(), label, action));
+        list.add(0, new HistoryRecord(System.currentTimeMillis(), label, action, alarmId));
         if (list.size() > 200) {
             list = list.subList(0, 200);
         }

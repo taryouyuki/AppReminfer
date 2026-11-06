@@ -13,7 +13,8 @@ public class BootReceiver extends BroadcastReceiver {
         String action = intent.getAction();
         if (Intent.ACTION_BOOT_COMPLETED.equals(action)
                 || Intent.ACTION_TIME_CHANGED.equals(action)
-                || Intent.ACTION_TIMEZONE_CHANGED.equals(action)) {
+                || Intent.ACTION_TIMEZONE_CHANGED.equals(action)
+                || Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)) {
             SharedPreferences prefs = context.getSharedPreferences("appalarm_prefs", Context.MODE_PRIVATE);
             List<AlarmEntry> list = AlarmEntry.loadAll(prefs);
             AlarmReceiver.rescheduleAll(context, list);

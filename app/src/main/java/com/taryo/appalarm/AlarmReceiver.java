@@ -7,9 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.speech.tts.TextToSpeech;
-import android.speech.tts.UtteranceProgressListener;
-import java.util.Locale;
 
 import java.util.List;
 
@@ -31,7 +28,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         if (ACTION_OPEN.equals(action)) {
             String pkg = intent.getStringExtra("pkg");
             String label = intent.getStringExtra("label");
-            HistoryRecord.record(context, label, HistoryRecord.ACTION_STOP);
+            HistoryRecord.record(context, label, HistoryRecord.ACTION_STOP, intent.getIntExtra("id", -1));
             if (pkg != null && !pkg.isEmpty()) {
                 Intent launch = context.getPackageManager().getLaunchIntentForPackage(pkg);
                 if (launch != null) {
@@ -46,8 +43,6 @@ public class AlarmReceiver extends BroadcastReceiver {
             int id = intent.getIntExtra("id", 0);
             String label = intent.getStringExtra("label");
             int snoozesUsed = intent.getIntExtra("snoozesUsed", 1);
-            HistoryRecord.record(context, label, HistoryRecord.ACTION_SNOOZE);
-
             List<AlarmEntry> list = AlarmEntry.loadAll(prefs);
             AlarmEntry target = null;
             for (AlarmEntry e : list) {
@@ -58,10 +53,20 @@ public class AlarmReceiver extends BroadcastReceiver {
             }
 
             if (target != null) {
+                HistoryRecord.record(context, label, HistoryRecord.ACTION_SNOOZE, id);
                 int min = target.snoozeMinutes > 0 ? target.snoozeMinutes : prefs.getInt("default_snooze_min", 5);
+                if (target.progressiveEnabled) min = Math.min(60, min * Math.max(1, snoozesUsed));
                 long triggerAt = System.currentTimeMillis() + (min * 60 * 1000L);
                 scheduleExact(context, target, triggerAt, snoozesUsed);
             }
+            return;
+        }
+
+        if (ACTION_DISMISS.equals(action)) {
+            int id = intent.getIntExtra("id", 0);
+            android.app.NotificationManager nm = (android.app.NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null) nm.cancel(id);
+            HistoryRecord.record(context, intent.getStringExtra("label"), HistoryRecord.ACTION_STOP, id);
             return;
         }
 
@@ -78,58 +83,29 @@ public class AlarmReceiver extends BroadcastReceiver {
                 }
             }
 
-            if (target == null || (!target.enabled && snoozesUsed == 0)) return;
+            if (target == null || !target.enabled) return;
 
             // アラーム鳴動モードか通知確認モードか
             if (target.alarmMode) {
+                HistoryRecord.record(context, target.label, HistoryRecord.ACTION_NOTIFY, target.id);
                 NotificationHelper.showFullScreenAlarm(context, target, snoozesUsed);
             } else if (target.autoOpen) {
-                HistoryRecord.record(context, target.label, HistoryRecord.ACTION_AUTO);
+                HistoryRecord.record(context, target.label, HistoryRecord.ACTION_AUTO, target.id);
                 Intent launch = context.getPackageManager().getLaunchIntentForPackage(target.pkg);
                 if (launch != null) {
                     launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     context.startActivity(launch);
                 }
             } else {
-                HistoryRecord.record(context, target.label, HistoryRecord.ACTION_NOTIFY);
+                HistoryRecord.record(context, target.label, HistoryRecord.ACTION_NOTIFY, target.id);
                 NotificationHelper.showPromptNotification(context, target, snoozesUsed);
-                if (target.soundMode == AlarmEntry.SOUND_VOICE) {
-                    speakNotification(context, target.voiceText == null || target.voiceText.trim().isEmpty()
-                            ? target.label : target.voiceText);
-                }
             }
 
-            target.skipAt = 0;
-            // 1回だけのアラームは発火後に無効化（スヌーズは別途再予約される）
-            if (target.mode == AlarmEntry.MODE_ONCE) {
-                target.enabled = false;
-                AlarmEntry.saveAll(prefs, list);
-            }
             // 次回予定を再スケジュール
             rescheduleAll(context, list);
             WidgetProvider.updateAllWidgets(context);
             AlarmTileService.requestTileUpdate(context);
         }
-    }
-
-    private static void speakNotification(Context context, String message) {
-        final TextToSpeech[] holder = new TextToSpeech[1];
-        holder[0] = new TextToSpeech(context.getApplicationContext(), status -> {
-            TextToSpeech engine = holder[0];
-            if (engine == null) return;
-            if (status == TextToSpeech.SUCCESS) {
-                engine.setLanguage(Locale.JAPAN);
-                engine.setOnUtteranceProgressListener(new UtteranceProgressListener() {
-                    @Override public void onStart(String id) {}
-                    @Override public void onDone(String id) { engine.shutdown(); holder[0] = null; }
-                    @Override public void onError(String id) { engine.shutdown(); holder[0] = null; }
-                });
-                engine.speak(message, TextToSpeech.QUEUE_FLUSH, null, "appalarm_voice");
-            } else {
-                engine.shutdown();
-                holder[0] = null;
-            }
-        });
     }
 
     public static void rescheduleAll(Context context, List<AlarmEntry> list) {
@@ -160,12 +136,13 @@ public class AlarmReceiver extends BroadcastReceiver {
         PendingIntent pi = PendingIntent.getBroadcast(context, e.id, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !am.canScheduleExactAlarms()) {
-            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pi);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pi);
-        } else {
-            am.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, pi);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pi);
+            else am.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, pi);
+        } catch (SecurityException denied) {
+            // Keep a best-effort reminder scheduled when exact-alarm access is denied.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pi);
+            else am.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pi);
         }
     }
 

@@ -17,7 +17,7 @@ android {
         minSdk 26
         targetSdk 34
         versionCode appVersionCode()
-        versionName "1.3"
+        versionName "2.0"
     }
 
     // リポジトリ同梱の固定キーストアで署名 → 毎回同じ署名になり上書き更新可能

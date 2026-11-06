@@ -22,6 +22,41 @@ public class SettingsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_settings);
 
         final SharedPreferences prefs = getSharedPreferences("appalarm_prefs", MODE_PRIVATE);
+        Button notificationSettings = findViewById(R.id.btn_notification_settings);
+        notificationSettings.setOnClickListener(v -> {
+            try {
+                Intent intent = new Intent(android.provider.Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS);
+                intent.putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, getPackageName());
+                intent.putExtra(android.provider.Settings.EXTRA_CHANNEL_ID, NotificationHelper.CHANNEL_ID_PROMPT);
+                startActivity(intent);
+            } catch (Exception ignored) {
+                startActivity(new Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                        .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, getPackageName()));
+            }
+        });
+        Button fullScreenSettings = findViewById(R.id.btn_fullscreen_settings);
+        fullScreenSettings.setOnClickListener(v -> {
+            if (android.os.Build.VERSION.SDK_INT >= 34) {
+                try {
+                    startActivity(new Intent(android.provider.Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT)
+                            .setData(android.net.Uri.parse("package:" + getPackageName())));
+                } catch (Exception ignored) {}
+            } else {
+                Toast.makeText(this, "Android 14以降で必要な設定です", Toast.LENGTH_SHORT).show();
+            }
+        });
+        Button exactSettings = findViewById(R.id.btn_exact_alarm_settings);
+        exactSettings.setOnClickListener(v -> {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                try {
+                    Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                    intent.setData(android.net.Uri.parse("package:" + getPackageName()));
+                    startActivity(intent);
+                } catch (Exception ignored) {}
+            } else {
+                Toast.makeText(this, "このAndroidバージョンでは個別の許可画面はありません", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         // 0. システムカラー (Material You / Dynamic Colors) 設定
         SwitchCompat switchDynamicColor = findViewById(R.id.switch_dynamic_color);

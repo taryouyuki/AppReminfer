@@ -80,6 +80,8 @@ public class WakeActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 stopSound();
+                android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                if (nm != null) nm.cancel(alarmId + 120000);
                 HistoryRecord.record(WakeActivity.this, label, HistoryRecord.ACTION_STOP);
                 if (pkg != null && !pkg.isEmpty()) {
                     Intent launch = getPackageManager().getLaunchIntentForPackage(pkg);
@@ -91,8 +93,10 @@ public class WakeActivity extends AppCompatActivity {
             }
         });
 
-        int maxSnooze = prefs.getInt("default_max_snooze", 3);
-        int snoozeMin = prefs.getInt("default_snooze_min", 5);
+        int configuredMax = getIntent().getIntExtra("maxSnooze", -1);
+        int configuredMin = getIntent().getIntExtra("snoozeMinutes", -1);
+        int maxSnooze = configuredMax != -1 ? configuredMax : prefs.getInt("default_max_snooze", 3);
+        int snoozeMin = configuredMin > 0 ? configuredMin : prefs.getInt("default_snooze_min", 5);
         if (maxSnooze == -2 || (maxSnooze > 0 && snoozesUsed >= maxSnooze)) {
             btnSnooze.setVisibility(View.GONE);
         } else {
@@ -101,6 +105,8 @@ public class WakeActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     stopSound();
+                    android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                    if (nm != null) nm.cancel(alarmId + 120000);
                     HistoryRecord.record(WakeActivity.this, label, HistoryRecord.ACTION_SNOOZE);
                     Intent snoozeIntent = new Intent(WakeActivity.this, AlarmReceiver.class);
                     snoozeIntent.setAction(AlarmReceiver.ACTION_SNOOZE);

@@ -157,6 +157,31 @@
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:layout_marginTop="4dp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="曜日を選択（複数選択できます）"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="8dp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <CheckBox android:id="@+id/day_mon" android:layout_width="wrap_content" android:layout_height="48dp" android:text="月" />
+                    <CheckBox android:id="@+id/day_tue" android:layout_width="wrap_content" android:layout_height="48dp" android:text="火" />
+                    <CheckBox android:id="@+id/day_wed" android:layout_width="wrap_content" android:layout_height="48dp" android:text="水" />
+                    <CheckBox android:id="@+id/day_thu" android:layout_width="wrap_content" android:layout_height="48dp" android:text="木" />
+                    <CheckBox android:id="@+id/day_fri" android:layout_width="wrap_content" android:layout_height="48dp" android:text="金" />
+                    <CheckBox android:id="@+id/day_sat" android:layout_width="wrap_content" android:layout_height="48dp" android:text="土" />
+                    <CheckBox android:id="@+id/day_sun" android:layout_width="wrap_content" android:layout_height="48dp" android:text="日" />
+                </LinearLayout>
+                <DatePicker
+                    android:id="@+id/picker_alarm_date"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:calendarViewShown="false"
+                    android:datePickerMode="spinner" />
                 <CheckBox
                     android:id="@+id/cb_skip_holidays"
                     android:layout_width="match_parent"
@@ -164,6 +189,36 @@
                     android:minHeight="48dp"
                     android:text="日本の祝日はスキップする"
                     android:textColor="?attr/colorOnSurface" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.Material3.CardView.Filled"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="?attr/colorSurfaceContainer"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="通知方法" android:textSize="18sp" android:textStyle="bold" />
+                <Spinner android:id="@+id/spinner_sound_mode" android:layout_width="match_parent"
+                    android:layout_height="56dp" />
+                <EditText android:id="@+id/edit_voice_text" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:hint="読み上げる文章" android:minHeight="56dp"
+                    android:textSize="16sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="このアラームの再通知（未設定なら全体設定を使用）"
+                    android:textSize="15sp" android:layout_marginTop="8dp" />
+                <Spinner android:id="@+id/spinner_alarm_snooze_min" android:layout_width="match_parent"
+                    android:layout_height="52dp" />
+                <Spinner android:id="@+id/spinner_alarm_snooze_max" android:layout_width="match_parent"
+                    android:layout_height="52dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

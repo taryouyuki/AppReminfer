@@ -52,6 +52,7 @@ public class AlarmEntry {
     // Snooze
     public int snoozeMinutes = -1; // -1 = default
     public int maxSnooze = -1;
+    public long skipAt = 0;
 
     // NEW: グループ / タグ整理 ("朝", "仕事", "夜", etc.)
     public String group = "";
@@ -88,6 +89,7 @@ public class AlarmEntry {
         obj.put("voiceText", voiceText);
         obj.put("snoozeMinutes", snoozeMinutes);
         obj.put("maxSnooze", maxSnooze);
+        obj.put("skipAt", skipAt);
         obj.put("group", group != null ? group : "");
         return obj;
     }
@@ -124,6 +126,7 @@ public class AlarmEntry {
         e.voiceText = obj.optString("voiceText", "");
         e.snoozeMinutes = obj.optInt("snoozeMinutes", -1);
         e.maxSnooze = obj.optInt("maxSnooze", -1);
+        e.skipAt = obj.optLong("skipAt", 0);
         e.group = obj.optString("group", "");
         return e;
     }

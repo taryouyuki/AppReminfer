@@ -20,6 +20,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
+import android.widget.DatePicker;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
@@ -36,6 +37,13 @@ public class EditActivity extends AppCompatActivity {
     private CheckBox cbSkipHolidays;
     private CheckBox cbAutoOpen;
     private CheckBox cbAlarmMode;
+    private CheckBox[] dayChecks;
+    private DatePicker datePicker;
+    private Spinner spinnerSoundMode;
+    private android.widget.EditText editVoiceText;
+    private Spinner spinnerAlarmSnoozeMin, spinnerAlarmSnoozeMax;
+    private final int[] snoozeMinuteValues = {-1, 1, 5, 10, 15, 30, 60};
+    private final int[] snoozeMaxValues = {-1, 0, 1, 2, 3, 5, -2};
 
     private List<AppItem> installedApps = new ArrayList<>();
     private AlarmEntry entry;
@@ -61,6 +69,26 @@ public class EditActivity extends AppCompatActivity {
         cbSkipHolidays = findViewById(R.id.cb_skip_holidays);
         cbAutoOpen = findViewById(R.id.cb_auto_open);
         cbAlarmMode = findViewById(R.id.cb_alarm_mode);
+        dayChecks = new CheckBox[]{findViewById(R.id.day_mon), findViewById(R.id.day_tue),
+                findViewById(R.id.day_wed), findViewById(R.id.day_thu), findViewById(R.id.day_fri),
+                findViewById(R.id.day_sat), findViewById(R.id.day_sun)};
+        datePicker = findViewById(R.id.picker_alarm_date);
+        spinnerSoundMode = findViewById(R.id.spinner_sound_mode);
+        editVoiceText = findViewById(R.id.edit_voice_text);
+        spinnerAlarmSnoozeMin = findViewById(R.id.spinner_alarm_snooze_min);
+        spinnerAlarmSnoozeMax = findViewById(R.id.spinner_alarm_snooze_max);
+        ArrayAdapter<String> snoozeMinAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item,
+                new String[]{"全体設定を使う", "1分", "5分", "10分", "15分", "30分", "60分"});
+        snoozeMinAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerAlarmSnoozeMin.setAdapter(snoozeMinAdapter);
+        ArrayAdapter<String> snoozeMaxAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item,
+                new String[]{"全体設定を使う", "再通知なし", "1回", "2回", "3回", "5回", "上限なし"});
+        snoozeMaxAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerAlarmSnoozeMax.setAdapter(snoozeMaxAdapter);
+        String[] soundModes = {"通常通知", "無音で通知", "文章を音声で読み上げ", "アラームとして鳴らす"};
+        ArrayAdapter<String> soundAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, soundModes);
+        soundAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerSoundMode.setAdapter(soundAdapter);
 
         Button btnSave = findViewById(R.id.btn_save);
         Button btnDelete = findViewById(R.id.btn_delete);
@@ -70,7 +98,7 @@ public class EditActivity extends AppCompatActivity {
         spinnerApps.setAdapter(appAdapter);
 
         // 繰り返しモード
-        String[] repeatModes = new String[]{"毎日", "1回だけ", "平日のみ (月〜金)"};
+        String[] repeatModes = new String[]{"毎日", "1回だけ", "曜日を選択", "日付を指定"};
         ArrayAdapter<String> repeatAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, repeatModes);
         repeatAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerRepeat.setAdapter(repeatAdapter);
@@ -119,6 +147,13 @@ public class EditActivity extends AppCompatActivity {
         cbSkipHolidays.setChecked(entry.skipHolidays);
         cbAutoOpen.setChecked(entry.autoOpen);
         cbAlarmMode.setChecked(entry.alarmMode);
+        for (int i = 0; i < 7; i++) dayChecks[i].setChecked((entry.days & (1 << i)) != 0);
+        if (entry.year > 0 && entry.month > 0 && entry.day > 0)
+            datePicker.updateDate(entry.year, entry.month - 1, entry.day);
+        spinnerSoundMode.setSelection(entry.soundMode == AlarmEntry.SOUND_VOICE ? 2 : (entry.soundMode == AlarmEntry.SOUND_CUSTOM ? 3 : entry.soundMode));
+        editVoiceText.setText(entry.voiceText == null ? "" : entry.voiceText);
+        for (int i = 0; i < snoozeMinuteValues.length; i++) if (snoozeMinuteValues[i] == entry.snoozeMinutes) spinnerAlarmSnoozeMin.setSelection(i);
+        for (int i = 0; i < snoozeMaxValues.length; i++) if (snoozeMaxValues[i] == entry.maxSnooze) spinnerAlarmSnoozeMax.setSelection(i);
         editGroupTag.setText(entry.group != null ? entry.group : "");
 
         for (int i = 0; i < installedApps.size(); i++) {
@@ -130,8 +165,10 @@ public class EditActivity extends AppCompatActivity {
 
         if (entry.mode == AlarmEntry.MODE_ONCE) {
             spinnerRepeat.setSelection(1);
-        } else if (entry.mode == AlarmEntry.MODE_WEEKLY && entry.days == 0b0011111) {
+        } else if (entry.mode == AlarmEntry.MODE_WEEKLY) {
             spinnerRepeat.setSelection(2);
+        } else if (entry.mode == AlarmEntry.MODE_DATE) {
+            spinnerRepeat.setSelection(3);
         } else {
             spinnerRepeat.setSelection(0);
         }
@@ -176,11 +213,25 @@ public class EditActivity extends AppCompatActivity {
             entry.mode = AlarmEntry.MODE_ONCE;
         } else if (repeatIdx == 2) {
             entry.mode = AlarmEntry.MODE_WEEKLY;
-            entry.days = 0b0011111; // 月〜金
+            int mask = 0;
+            for (int i = 0; i < 7; i++) if (dayChecks[i].isChecked()) mask |= (1 << i);
+            if (mask == 0) { Toast.makeText(this, "曜日を1つ以上選択してください", Toast.LENGTH_SHORT).show(); return; }
+            entry.days = mask;
+        } else if (repeatIdx == 3) {
+            entry.mode = AlarmEntry.MODE_DATE;
+            entry.year = datePicker.getYear();
+            entry.month = datePicker.getMonth() + 1;
+            entry.day = datePicker.getDayOfMonth();
         } else {
             entry.mode = AlarmEntry.MODE_DAILY;
             entry.days = 0x7f;
         }
+        int soundChoice = spinnerSoundMode.getSelectedItemPosition();
+        entry.soundMode = soundChoice == 2 ? AlarmEntry.SOUND_VOICE : (soundChoice == 3 ? AlarmEntry.SOUND_CUSTOM : soundChoice);
+        entry.voiceText = editVoiceText.getText().toString().trim();
+        entry.snoozeMinutes = snoozeMinuteValues[spinnerAlarmSnoozeMin.getSelectedItemPosition()];
+        entry.maxSnooze = snoozeMaxValues[spinnerAlarmSnoozeMax.getSelectedItemPosition()];
+        entry.alarmMode = entry.soundMode == AlarmEntry.SOUND_CUSTOM || cbAlarmMode.isChecked();
 
         SharedPreferences prefs = getSharedPreferences("appalarm_prefs", MODE_PRIVATE);
         List<AlarmEntry> list = AlarmEntry.loadAll(prefs);

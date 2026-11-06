@@ -210,7 +210,14 @@ public class EditActivity extends AppCompatActivity {
         cbAutoOpen.setChecked(entry.autoOpen);
         cbAlarmMode.setChecked(entry.alarmMode);
         cbStandaloneAlarm.setChecked(entry.standaloneAlarm);
-        cbAlarmMode.setOnCheckedChangeListener((button, checked) -> { if (checked) checkAlarmDisplaySetup(); });
+        cbAlarmMode.setOnCheckedChangeListener((button, checked) -> {
+            if (checked) {
+                cbAutoOpen.setChecked(false);
+                checkAlarmDisplaySetup();
+            }
+        });
+        cbAutoOpen.setOnCheckedChangeListener((button, checked) -> { if (checked) cbAlarmMode.setChecked(false); });
+        if (entry.alarmMode || entry.standaloneAlarm) cbAutoOpen.setChecked(false);
         cbAutoOpen.setEnabled(!entry.standaloneAlarm);
         spinnerSoundMode.setSelection(entry.soundMode == AlarmEntry.SOUND_CUSTOM ? 1 : (entry.soundMode == AlarmEntry.SOUND_SILENT ? 2 : (entry.soundMode == AlarmEntry.SOUND_VOICE ? 3 : 0)));
         spinnerNotificationVolume.setSelection(entry.notificationVolumePercent <= 45 ? 0 : (entry.notificationVolumePercent >= 90 ? 2 : 1));

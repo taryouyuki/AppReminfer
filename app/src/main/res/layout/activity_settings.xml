@@ -108,9 +108,9 @@
             app:cardElevation="0dp">
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
                 <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="合成音声の音量" android:textAppearance="?attr/textAppearanceTitleSmall" android:textColor="?attr/colorOnSurface" />
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Androidの通知音量を基準に、読み上げ音量を調整します。+5段階が初期値です。" android:textColor="?attr/colorOnSurfaceVariant" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Androidの通知音量を基準に、読み上げ音量を調整します。−5〜+10段階、初期値は+5です。" android:textColor="?attr/colorOnSurfaceVariant" />
                 <TextView android:id="@+id/tv_tts_volume_offset" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="通知音量 +5段階" android:textColor="?attr/colorOnSurface" />
-                <SeekBar android:id="@+id/seek_tts_volume_offset" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="10" />
+                <SeekBar android:id="@+id/seek_tts_volume_offset" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="15" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

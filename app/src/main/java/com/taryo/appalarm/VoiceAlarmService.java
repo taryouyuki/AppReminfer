@@ -79,7 +79,7 @@ public class VoiceAlarmService extends Service implements TextToSpeech.OnInitLis
             if (!prefs.contains("tts_volume_offset_steps") || previous == 3) edit.putInt("tts_volume_offset_steps", 5);
             edit.apply();
         }
-        return Math.max(-5, Math.min(5, prefs.getInt("tts_volume_offset_steps", 5)));
+        return Math.max(-5, Math.min(10, prefs.getInt("tts_volume_offset_steps", 5)));
     }
 
     @Override public void onCreate() {

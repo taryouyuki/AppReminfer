@@ -242,6 +242,14 @@
                     android:minHeight="48dp"
                     android:text="アラーム鳴動モード（全画面＋停止／スヌーズ）"
                     android:textColor="?attr/colorOnSurface" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="36dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="画面消灯中に自動表示するには、全画面通知の許可と「アラーム」通知の重要度「高」が必要です。設定画面で確認できます。"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
                 <CheckBox
                     android:id="@+id/cb_standalone_alarm"
                     android:layout_width="match_parent"

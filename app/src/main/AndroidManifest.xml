@@ -86,6 +86,8 @@
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="com.taryo.appalarm.ACTION_TOGGLE_NEXT" />
                 <action android:name="com.taryo.appalarm.ACTION_SKIP_NEXT" />
+                <action android:name="com.taryo.appalarm.ACTION_WIDGET_PREVIOUS" />
+                <action android:name="com.taryo.appalarm.ACTION_WIDGET_NEXT" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

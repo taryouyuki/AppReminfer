@@ -107,10 +107,14 @@ public class NotificationHelper {
         wake.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent full = PendingIntent.getActivity(context, entry.id + 120000, wake,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        android.net.Uri alarmUri = entry.alarmSoundUri == null || entry.alarmSoundUri.isEmpty()
+                ? android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_ALARM)
+                : android.net.Uri.parse(entry.alarmSoundUri);
+        VoiceAlarmService.playAlarmTone(context, entry.label, alarmUri, entry.volumePercent);
         NotificationCompat.Builder b = new NotificationCompat.Builder(context, CHANNEL_ID_ALARM)
                 .setSmallIcon(R.drawable.ic_tile_alarm).setContentTitle("アラーム: " + entry.label)
                 .setContentText("タップして停止またはスヌーズ").setCategory(NotificationCompat.CATEGORY_ALARM)
-                .setPriority(NotificationCompat.PRIORITY_MAX).setOngoing(true).setLocalOnly(!entry.watchEnabled)
+                .setPriority(NotificationCompat.PRIORITY_MAX).setOngoing(true).setLocalOnly(!entry.watchEnabled).setSilent(true)
                 .setContentIntent(full).setFullScreenIntent(full, true);
         android.app.NotificationManager nm = (android.app.NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (nm != null) nm.notify(entry.id, b.build());

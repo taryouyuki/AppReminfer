@@ -15,6 +15,8 @@
         android:src="@drawable/ic_tile_alarm"
         android:contentDescription="icon" />
 
+    <Button android:id="@+id/widget_btn_prev" android:layout_width="36dp" android:layout_height="48dp" android:minWidth="0dp" android:padding="0dp" android:background="#30FFFFFF" android:text="‹" android:textColor="#FFFFFF" android:textSize="24sp" />
+
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -26,7 +28,7 @@
             android:id="@+id/widget_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#FFFFFF"
+            android:textColor="#FFFFFFFF"
             android:textSize="20sp"
             android:textStyle="bold"
             android:text="07:00" />
@@ -35,11 +37,13 @@
             android:id="@+id/widget_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#E0E7FF"
+            android:textColor="#F3FFFFFF"
             android:textSize="12sp"
             android:singleLine="true"
             android:text="YouTube" />
     </LinearLayout>
+
+    <Button android:id="@+id/widget_btn_next" android:layout_width="36dp" android:layout_height="48dp" android:minWidth="0dp" android:padding="0dp" android:background="#30FFFFFF" android:text="›" android:textColor="#FFFFFF" android:textSize="24sp" />
 
     <!-- 即座にON/OFF切り替えできるボタン -->
     <LinearLayout

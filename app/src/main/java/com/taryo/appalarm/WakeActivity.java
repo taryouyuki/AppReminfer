@@ -88,13 +88,19 @@ public class WakeActivity extends AppCompatActivity {
             tvFade.setVisibility(View.VISIBLE);
         }
 
-        startAlarmSound(fadeEnabled, fadeSeconds);
+        // The receiver starts alarm-priority foreground playback before opening this
+        // screen, so sound does not depend on the notification's channel volume.
+        try {
+            vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+            if (vibrator != null) vibrator.vibrate(new long[]{0, 600, 400, 600, 400}, 0);
+        } catch (Exception ignored) { }
 
         btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (challengeEnabled) { runChallenge(); return; }
                 stopSound();
+                VoiceAlarmService.stopPlayback(WakeActivity.this);
                 cancelAlarmNotification();
                 HistoryRecord.record(WakeActivity.this, label, HistoryRecord.ACTION_STOP, alarmId);
                 if (!standaloneAlarm && pkg != null && !pkg.isEmpty()) {
@@ -117,6 +123,7 @@ public class WakeActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     stopSound();
+                    VoiceAlarmService.stopPlayback(WakeActivity.this);
                     cancelAlarmNotification();
                     HistoryRecord.record(WakeActivity.this, label, HistoryRecord.ACTION_SNOOZE, alarmId);
                     Intent snoozeIntent = new Intent(WakeActivity.this, AlarmReceiver.class);
@@ -152,7 +159,7 @@ public class WakeActivity extends AppCompatActivity {
     }
 
     private void dismissAfterChallenge() {
-        stopSound(); HistoryRecord.record(this, label, HistoryRecord.ACTION_STOP, alarmId);
+        stopSound(); VoiceAlarmService.stopPlayback(this); HistoryRecord.record(this, label, HistoryRecord.ACTION_STOP, alarmId);
         cancelAlarmNotification();
         if (!standaloneAlarm && pkg != null && !pkg.isEmpty()) { Intent launch = getPackageManager().getLaunchIntentForPackage(pkg); if (launch != null) startActivity(launch); }
         finish();
@@ -252,6 +259,12 @@ public class WakeActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        stopSound();
+        stopLocalFeedback();
+    }
+
+    private void stopLocalFeedback() {
+        if (fadeAnimator != null) { fadeAnimator.cancel(); fadeAnimator = null; }
+        if (mediaPlayer != null) { try { if (mediaPlayer.isPlaying()) mediaPlayer.stop(); mediaPlayer.release(); } catch (Exception ignored) { } mediaPlayer = null; }
+        if (vibrator != null) { try { vibrator.cancel(); } catch (Exception ignored) { } vibrator = null; }
     }
 }

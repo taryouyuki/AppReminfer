@@ -11,6 +11,7 @@ import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.animation.ValueAnimator;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import androidx.core.app.NotificationCompat;
@@ -24,11 +25,13 @@ public class VoiceAlarmService extends Service implements TextToSpeech.OnInitLis
     public static final String EXTRA_LABEL = "alarm_label";
     public static final String EXTRA_TONE_URI = "tone_uri";
     public static final String EXTRA_VOLUME = "tone_volume";
+    public static final String EXTRA_ALARM_LOOP = "alarm_loop";
     private TextToSpeech tts;
     private boolean ready;
     private String pendingText = "";
     private int latestStartId;
     private MediaPlayer player;
+    private ValueAnimator fadeAnimator;
 
     public static void start(Context context, String label, String text) {
         Intent intent = new Intent(context, VoiceAlarmService.class);
@@ -43,13 +46,29 @@ public class VoiceAlarmService extends Service implements TextToSpeech.OnInitLis
     }
 
     public static void playTone(Context context, String label, Uri uri, int volumePercent) {
+        startTone(context, label, uri, volumePercent, false);
+    }
+
+    public static void playAlarmTone(Context context, String label, Uri uri, int volumePercent) {
+        startTone(context, label, uri, volumePercent, true);
+    }
+
+    private static void startTone(Context context, String label, Uri uri, int volumePercent, boolean alarmLoop) {
         Intent intent = new Intent(context, VoiceAlarmService.class);
         intent.putExtra(EXTRA_LABEL, label);
         intent.putExtra(EXTRA_TONE_URI, uri == null ? "" : uri.toString());
         intent.putExtra(EXTRA_VOLUME, Math.max(0, Math.min(100, volumePercent)));
+        intent.putExtra(EXTRA_ALARM_LOOP, alarmLoop);
+        if (alarmLoop) {
+            android.content.SharedPreferences prefs = context.getSharedPreferences("appalarm_prefs", Context.MODE_PRIVATE);
+            intent.putExtra("fade_enabled", prefs.getBoolean("fade_enabled", true));
+            intent.putExtra("fade_seconds", prefs.getInt("fade_seconds", 10));
+        }
         try { if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context.startForegroundService(intent); else context.startService(intent); }
         catch (RuntimeException ignored) { }
     }
+
+    public static void stopPlayback(Context context) { context.stopService(new Intent(context, VoiceAlarmService.class)); }
 
     @Override public void onCreate() {
         super.onCreate();
@@ -61,25 +80,38 @@ public class VoiceAlarmService extends Service implements TextToSpeech.OnInitLis
         String label = intent == null ? "アラーム" : intent.getStringExtra(EXTRA_LABEL);
         String toneUri = intent == null ? null : intent.getStringExtra(EXTRA_TONE_URI);
         if (toneUri != null) {
-            startForeground(NOTIFICATION_ID, buildNotification(label));
+            boolean alarmLoop = intent.getBooleanExtra(EXTRA_ALARM_LOOP, false);
+            startForeground(NOTIFICATION_ID, buildNotification(label, alarmLoop));
             try {
                 if (player != null) { player.release(); player = null; }
-                Uri uri = toneUri.isEmpty() ? RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION) : Uri.parse(toneUri);
+                Uri uri = toneUri.isEmpty() ? RingtoneManager.getDefaultUri(alarmLoop ? RingtoneManager.TYPE_ALARM : RingtoneManager.TYPE_NOTIFICATION) : Uri.parse(toneUri);
                 player = new MediaPlayer();
-                player.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build());
+                player.setWakeMode(this, android.os.PowerManager.PARTIAL_WAKE_LOCK);
+                player.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build());
                 player.setDataSource(this, uri);
-                float vol = Math.max(0, Math.min(100, intent.getIntExtra(EXTRA_VOLUME, 70))) / 100f;
-                player.setVolume(vol, vol);
-                player.setOnCompletionListener(mp -> stopSelfResult(startId));
+                float vol = Math.max(0, Math.min(100, intent.getIntExtra(EXTRA_VOLUME, 100))) / 100f;
+                boolean fade = alarmLoop && intent.getBooleanExtra("fade_enabled", false);
+                player.setVolume(fade ? 0.05f : vol, fade ? 0.05f : vol);
+                player.setLooping(alarmLoop);
+                player.setOnCompletionListener(mp -> { if (!alarmLoop) stopSelfResult(startId); });
                 player.setOnErrorListener((mp, what, extra) -> { stopSelfResult(startId); return true; });
+                player.setOnPreparedListener(mp -> {
+                    mp.start();
+                    if (fade) {
+                        if (fadeAnimator != null) fadeAnimator.cancel();
+                        fadeAnimator = ValueAnimator.ofFloat(0.05f, vol);
+                        fadeAnimator.setDuration(Math.max(1, intent.getIntExtra("fade_seconds", 10)) * 1000L);
+                        fadeAnimator.addUpdateListener(a -> { if (player == mp && mp.isPlaying()) { float level = (float) a.getAnimatedValue(); mp.setVolume(level, level); } });
+                        fadeAnimator.start();
+                    }
+                });
                 player.prepareAsync();
-                player.setOnPreparedListener(MediaPlayer::start);
             } catch (Exception e) { stopSelfResult(startId); }
             return START_NOT_STICKY;
         }
         pendingText = intent == null ? "" : intent.getStringExtra(EXTRA_TEXT);
         if (pendingText == null || pendingText.trim().isEmpty()) pendingText = (label == null || label.trim().isEmpty() ? "アラーム" : label) + "です";
-        startForeground(NOTIFICATION_ID, buildNotification(label));
+        startForeground(NOTIFICATION_ID, buildNotification(label, false));
         if (tts == null) tts = new TextToSpeech(this, this);
         else if (ready) speakPending();
         return START_NOT_STICKY;
@@ -94,10 +126,10 @@ public class VoiceAlarmService extends Service implements TextToSpeech.OnInitLis
         }
     }
 
-    private android.app.Notification buildNotification(String label) {
+    private android.app.Notification buildNotification(String label, boolean alarmLoop) {
         return new NotificationCompat.Builder(this, CHANNEL)
                 .setSmallIcon(R.drawable.ic_tile_alarm)
-                .setContentTitle("音声でアラームを通知中")
+                .setContentTitle(alarmLoop ? "アラーム音を再生中" : "音声でアラームを通知中")
                 .setContentText(label == null ? "アラーム" : label)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .setOngoing(true)
@@ -127,6 +159,7 @@ public class VoiceAlarmService extends Service implements TextToSpeech.OnInitLis
     }
 
     @Override public void onDestroy() {
+        if (fadeAnimator != null) { fadeAnimator.cancel(); fadeAnimator = null; }
         if (player != null) { try { player.stop(); } catch (Exception ignored) { } player.release(); player = null; }
         if (tts != null) { tts.stop(); tts.shutdown(); tts = null; }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) stopForeground(STOP_FOREGROUND_REMOVE);

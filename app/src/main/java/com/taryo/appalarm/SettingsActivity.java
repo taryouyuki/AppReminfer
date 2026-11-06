@@ -47,6 +47,12 @@ public class SettingsActivity extends AppCompatActivity {
         tvPermissionStatus = findViewById(R.id.tv_permission_status);
         refreshBackupDate(); refreshPermissionStatus();
         findViewById(R.id.btn_permission_check).setOnClickListener(v -> showPermissionOptions());
+        findViewById(R.id.btn_perm_exact).setOnClickListener(v -> openPermission(0));
+        findViewById(R.id.btn_perm_notification).setOnClickListener(v -> openPermission(1));
+        findViewById(R.id.btn_perm_fullscreen).setOnClickListener(v -> openPermission(2));
+        findViewById(R.id.btn_perm_overlay).setOnClickListener(v -> openPermission(5));
+        findViewById(R.id.btn_perm_calendar).setOnClickListener(v -> openPermission(4));
+        findViewById(R.id.btn_perm_battery).setOnClickListener(v -> openPermission(3));
 
         // 0. システムカラー (Material You / Dynamic Colors) 設定
         SwitchCompat switchDynamicColor = findViewById(R.id.switch_dynamic_color);
@@ -214,14 +220,24 @@ public class SettingsActivity extends AppCompatActivity {
         NotificationManager nm = getSystemService(NotificationManager.class);
         boolean full = Build.VERSION.SDK_INT < 34 || (nm != null && nm.canUseFullScreenIntent());
         boolean calendar = checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED;
+        boolean overlay = Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this);
         PowerManager power = getSystemService(PowerManager.class);
         boolean unrestricted = power != null && power.isIgnoringBatteryOptimizations(getPackageName());
         tvPermissionStatus.setText("通知: " + status(notification) + "\n正確なアラーム: " + status(exact)
-                + "\nロック中の全画面表示: " + status(full) + "\nカレンダー: " + status(calendar)
+                + "\nロック中の全画面表示: " + status(full) + "\n他アプリの上に表示: " + status(overlay) + "\nカレンダー: " + status(calendar)
                 + "\n電池最適化の対象外: " + status(unrestricted));
     }
 
-    @Override protected void onResume() { super.onResume(); if (tvPermissionStatus != null) refreshPermissionStatus(); }
+    @Override protected void onResume() {
+        super.onResume();
+        if (tvPermissionStatus != null) {
+            refreshPermissionStatus();
+            AlarmManager manager = getSystemService(AlarmManager.class);
+            if (Build.VERSION.SDK_INT < 31 || (manager != null && manager.canScheduleExactAlarms())) {
+                AlarmReceiver.rescheduleAll(this, AlarmEntry.loadAll(getSharedPreferences("appalarm_prefs", MODE_PRIVATE)));
+            }
+        }
+    }
 
     @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -229,6 +245,24 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private String status(boolean granted) { return granted ? "許可済み" : "未許可"; }
+
+    private void openPermission(int which) {
+        if (which == 1 && Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIFICATIONS); return;
+        }
+        if (which == 4 && checkSelfPermission(Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.READ_CALENDAR}, REQ_CALENDAR); return;
+        }
+        Intent intent;
+        if (which == 0 && Build.VERSION.SDK_INT >= 31) intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:" + getPackageName()));
+        else if (which == 1) { intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS); intent.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName()); }
+        else if (which == 2 && Build.VERSION.SDK_INT >= 34) intent = new Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, Uri.parse("package:" + getPackageName()));
+        else if (which == 3) intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+        else if (which == 4) { Toast.makeText(this, "カレンダー権限は許可済みです", Toast.LENGTH_SHORT).show(); return; }
+        else if (which == 5 && Build.VERSION.SDK_INT >= 23) intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+        else intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()));
+        try { startActivity(intent); } catch (Exception e) { Toast.makeText(this, "この設定画面を開けませんでした", Toast.LENGTH_SHORT).show(); }
+    }
 
     private void showPermissionOptions() {
         refreshPermissionStatus();

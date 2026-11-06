@@ -169,6 +169,13 @@
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="権限と動作状況" android:textAppearance="?attr/textAppearanceTitleSmall" android:textColor="?attr/colorOnSurface" />
                 <TextView android:id="@+id/tv_permission_status" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textColor="?attr/colorOnSurfaceVariant" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="未許可の項目を押して、Androidの画面で許可してください。ロック中に鳴らすには正確なアラーム・通知・全画面表示を許可します。" android:textColor="?attr/colorOnSurfaceVariant" />
+                <Button android:id="@+id/btn_perm_exact" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="正確なアラームを許可" />
+                <Button android:id="@+id/btn_perm_notification" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="通知を許可" />
+                <Button android:id="@+id/btn_perm_fullscreen" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ロック画面に表示（全画面通知）を許可" />
+                <Button android:id="@+id/btn_perm_overlay" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="他のアプリの上に表示を許可（必要な端末のみ）" />
+                <Button android:id="@+id/btn_perm_calendar" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="カレンダーを許可" />
+                <Button android:id="@+id/btn_perm_battery" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="電池の最適化を設定" />
                 <Button android:id="@+id/btn_permission_check" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="権限・省電力設定を確認" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

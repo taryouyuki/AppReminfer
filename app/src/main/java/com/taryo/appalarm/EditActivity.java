@@ -79,6 +79,22 @@ public class EditActivity extends AppCompatActivity {
     private boolean initializingAppSelection = true;
     private AlarmEntry entry;
     private boolean isNew = false;
+    private boolean adjustingTimePicker;
+
+    @Override public boolean dispatchTouchEvent(android.view.MotionEvent event) {
+        if (timePicker != null) {
+            int[] location = new int[2]; timePicker.getLocationOnScreen(location);
+            float x = event.getRawX(), y = event.getRawY();
+            boolean inside = x >= location[0] && x <= location[0] + timePicker.getWidth()
+                    && y >= location[1] && y <= location[1] + timePicker.getHeight();
+            if (event.getActionMasked() == android.view.MotionEvent.ACTION_DOWN && inside) adjustingTimePicker = true;
+            if (adjustingTimePicker) timePicker.getParent().requestDisallowInterceptTouchEvent(true);
+            if (event.getActionMasked() == android.view.MotionEvent.ACTION_UP || event.getActionMasked() == android.view.MotionEvent.ACTION_CANCEL) {
+                adjustingTimePicker = false; timePicker.getParent().requestDisallowInterceptTouchEvent(false);
+            }
+        }
+        return super.dispatchTouchEvent(event);
+    }
 
     private static class AppItem {
         String pkg;

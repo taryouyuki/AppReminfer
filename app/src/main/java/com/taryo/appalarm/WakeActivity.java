@@ -150,8 +150,20 @@ public class WakeActivity extends AppCompatActivity {
             return;
         }
         int a = 12 + (alarmId % 17), b = 3 + (alarmId % 9);
-        EditText answer = new EditText(this); answer.setInputType(2);
-        new AlertDialog.Builder(this).setTitle("停止チャレンジ").setMessage(a + " + " + b + " = ?").setView(answer)
+        TextView formula = new TextView(this);
+        formula.setText(a + " + " + b + " = ?");
+        formula.setTextSize(36);
+        formula.setTypeface(null, android.graphics.Typeface.BOLD);
+        formula.setGravity(android.view.Gravity.CENTER);
+        formula.setPadding(12, 24, 12, 24);
+        EditText answer = new EditText(this); answer.setInputType(android.text.InputType.TYPE_CLASS_NUMBER); answer.setTextSize(24); answer.setGravity(android.view.Gravity.CENTER); answer.setSingleLine(true); answer.setHint("答え");
+        android.widget.LinearLayout challengeView = new android.widget.LinearLayout(this);
+        challengeView.setOrientation(android.widget.LinearLayout.VERTICAL);
+        int horizontalPadding = (int) (24 * getResources().getDisplayMetrics().density);
+        challengeView.setPadding(horizontalPadding, 0, horizontalPadding, 0);
+        challengeView.addView(formula, new android.widget.LinearLayout.LayoutParams(-1, -2));
+        challengeView.addView(answer, new android.widget.LinearLayout.LayoutParams(-1, -2));
+        new AlertDialog.Builder(this).setTitle("停止チャレンジ").setView(challengeView)
                 .setPositiveButton("回答", (d, w) -> {
                     try { if (Integer.parseInt(answer.getText().toString()) == a + b) dismissAfterChallenge(); else Toast.makeText(this, "答えが違います", Toast.LENGTH_SHORT).show(); }
                     catch (Exception e) { Toast.makeText(this, "数字を入力してください", Toast.LENGTH_SHORT).show(); }

@@ -15,7 +15,7 @@
         android:src="@drawable/ic_tile_alarm"
         android:contentDescription="icon" />
 
-    <Button android:id="@+id/widget_btn_prev" android:layout_width="36dp" android:layout_height="48dp" android:minWidth="0dp" android:padding="0dp" android:background="#30FFFFFF" android:text="‹" android:textColor="#FFFFFF" android:textSize="24sp" />
+    <Button android:id="@+id/widget_btn_prev" android:layout_width="36dp" android:layout_height="44dp" android:minWidth="0dp" android:padding="0dp" android:background="@drawable/widget_button_background" android:text="‹" android:textColor="#633D50" android:textSize="24sp" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -28,7 +28,7 @@
             android:id="@+id/widget_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#FFFFFFFF"
+            android:textColor="#633D50"
             android:textSize="20sp"
             android:textStyle="bold"
             android:text="07:00" />
@@ -37,13 +37,13 @@
             android:id="@+id/widget_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#F3FFFFFF"
+            android:textColor="#725365"
             android:textSize="12sp"
             android:singleLine="true"
             android:text="YouTube" />
     </LinearLayout>
 
-    <Button android:id="@+id/widget_btn_next" android:layout_width="36dp" android:layout_height="48dp" android:minWidth="0dp" android:padding="0dp" android:background="#30FFFFFF" android:text="›" android:textColor="#FFFFFF" android:textSize="24sp" />
+    <Button android:id="@+id/widget_btn_next" android:layout_width="36dp" android:layout_height="44dp" android:minWidth="0dp" android:padding="0dp" android:background="@drawable/widget_button_background" android:text="›" android:textColor="#633D50" android:textSize="24sp" />
 
     <!-- 即座にON/OFF切り替えできるボタン -->
     <LinearLayout
@@ -54,8 +54,8 @@
             android:id="@+id/widget_btn_toggle"
             android:layout_width="wrap_content"
             android:layout_height="36dp"
-            android:background="#30FFFFFF"
-            android:textColor="#FFFFFF"
+            android:background="@drawable/widget_button_background"
+            android:textColor="#633D50"
             android:textSize="11sp"
             android:textStyle="bold"
             android:paddingStart="8dp"
@@ -66,8 +66,8 @@
             android:layout_width="wrap_content"
             android:layout_height="32dp"
             android:layout_marginTop="2dp"
-            android:background="#30FFFFFF"
-            android:textColor="#FFFFFF"
+            android:background="@drawable/widget_button_background"
+            android:textColor="#633D50"
             android:textSize="10sp"
             android:paddingStart="6dp"
             android:paddingEnd="6dp"

@@ -7,7 +7,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
+import android.content.res.ColorStateList;
 import android.os.Build;
 import android.widget.RemoteViews;
 import java.util.List;
@@ -54,10 +54,15 @@ public class WidgetProvider extends AppWidgetProvider {
         List<AlarmEntry> alarms = AlarmEntry.loadAll(prefs);
         AlarmEntry selected = findSelected(prefs, alarms, widgetId);
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_alarm);
-        int accent = widgetAccent(context);
-        views.setInt(R.id.widget_container, "setBackgroundColor", accent);
-        views.setInt(R.id.widget_time, "setTextColor", Color.WHITE);
-        views.setInt(R.id.widget_label, "setTextColor", 0xFFF3F3F3);
+        int accent = widgetColor(context, "system_accent1_100", 0xFFFFEAF1);
+        int ink = widgetColor(context, "system_accent1_900", 0xFF633D50);
+        if (Build.VERSION.SDK_INT >= 31) views.setColorStateList(R.id.widget_container, "setBackgroundTintList", ColorStateList.valueOf(accent));
+        views.setInt(R.id.widget_time, "setTextColor", ink);
+        views.setInt(R.id.widget_label, "setTextColor", ink);
+        views.setInt(R.id.widget_btn_prev, "setTextColor", ink);
+        views.setInt(R.id.widget_btn_next, "setTextColor", ink);
+        views.setInt(R.id.widget_btn_toggle, "setTextColor", ink);
+        views.setInt(R.id.widget_btn_skip, "setTextColor", ink);
 
         if (selected != null) {
             views.setTextViewText(R.id.widget_time, NextTime.dateTimeText(NextTime.nextTrigger(selected, System.currentTimeMillis())));
@@ -111,12 +116,12 @@ public class WidgetProvider extends AppWidgetProvider {
 
     private static String selectionKey(int widgetId) { return "widget_alarm_selection_" + widgetId; }
 
-    private static int widgetAccent(Context context) {
+    private static int widgetColor(Context context, String colorName, int fallback) {
         if (Build.VERSION.SDK_INT >= 31) {
-            try { int id = context.getResources().getIdentifier("system_accent1_600", "color", "android"); if (id != 0) return context.getColor(id); }
+            try { int id = context.getResources().getIdentifier(colorName, "color", "android"); if (id != 0) return context.getColor(id); }
             catch (Exception ignored) { }
         }
-        return 0xFF6750A4;
+        return fallback;
     }
 
     public static void updateAllWidgets(Context context) {

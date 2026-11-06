@@ -139,6 +139,10 @@ public class VoiceAlarmService extends Service implements TextToSpeech.OnInitLis
 
     @Override public void onInit(int status) {
         if (status != TextToSpeech.SUCCESS || tts == null) { stopSelf(); return; }
+        tts.setAudioAttributes(new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                .build());
         int language = tts.setLanguage(Locale.JAPAN);
         if (language == TextToSpeech.LANG_MISSING_DATA || language == TextToSpeech.LANG_NOT_SUPPORTED) {
             tts.setLanguage(Locale.getDefault());

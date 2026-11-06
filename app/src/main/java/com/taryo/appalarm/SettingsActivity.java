@@ -50,7 +50,6 @@ public class SettingsActivity extends AppCompatActivity {
         findViewById(R.id.btn_perm_exact).setOnClickListener(v -> openPermission(0));
         findViewById(R.id.btn_perm_notification).setOnClickListener(v -> openPermission(1));
         findViewById(R.id.btn_perm_fullscreen).setOnClickListener(v -> openPermission(2));
-        findViewById(R.id.btn_perm_overlay).setOnClickListener(v -> openPermission(5));
         findViewById(R.id.btn_perm_calendar).setOnClickListener(v -> openPermission(4));
         findViewById(R.id.btn_perm_battery).setOnClickListener(v -> openPermission(3));
 
@@ -220,11 +219,10 @@ public class SettingsActivity extends AppCompatActivity {
         NotificationManager nm = getSystemService(NotificationManager.class);
         boolean full = Build.VERSION.SDK_INT < 34 || (nm != null && nm.canUseFullScreenIntent());
         boolean calendar = checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED;
-        boolean overlay = Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this);
         PowerManager power = getSystemService(PowerManager.class);
         boolean unrestricted = power != null && power.isIgnoringBatteryOptimizations(getPackageName());
         tvPermissionStatus.setText("通知: " + status(notification) + "\n正確なアラーム: " + status(exact)
-                + "\nロック中の全画面表示: " + status(full) + "\n他アプリの上に表示: " + status(overlay) + "\nカレンダー: " + status(calendar)
+                + "\nロック中の全画面表示: " + status(full) + "\n他アプリの上に表示: アラームには不要\nカレンダー: " + status(calendar)
                 + "\n電池最適化の対象外: " + status(unrestricted));
     }
 
@@ -259,7 +257,6 @@ public class SettingsActivity extends AppCompatActivity {
         else if (which == 2 && Build.VERSION.SDK_INT >= 34) intent = new Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, Uri.parse("package:" + getPackageName()));
         else if (which == 3) intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
         else if (which == 4) { Toast.makeText(this, "カレンダー権限は許可済みです", Toast.LENGTH_SHORT).show(); return; }
-        else if (which == 5 && Build.VERSION.SDK_INT >= 23) intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
         else intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()));
         try { startActivity(intent); } catch (Exception e) { Toast.makeText(this, "この設定画面を開けませんでした", Toast.LENGTH_SHORT).show(); }
     }

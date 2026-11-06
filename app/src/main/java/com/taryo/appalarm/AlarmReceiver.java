@@ -94,7 +94,12 @@ public class AlarmReceiver extends BroadcastReceiver {
                 }
             }
 
-            if (target == null || !target.enabled) return;
+            if (target == null || (!target.enabled && snoozesUsed == 0)) return;
+
+            if (target.mode == AlarmEntry.MODE_ONCE || target.mode == AlarmEntry.MODE_DATE) {
+                target.enabled = false;
+                AlarmEntry.saveAll(prefs, list);
+            }
 
             // アラーム鳴動モードか通知確認モードか
             if (target.alarmMode) {

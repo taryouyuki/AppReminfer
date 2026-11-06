@@ -179,6 +179,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:layout_marginTop="4dp" />
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chip_group_weekdays"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    app:singleLine="false"
+                    app:singleSelection="false" />
                 <CheckBox
                     android:id="@+id/cb_skip_holidays"
                     android:layout_width="match_parent"
@@ -186,6 +193,17 @@
                     android:minHeight="48dp"
                     android:text="日本の祝日はスキップする"
                     android:textColor="?attr/colorOnSurface" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="日付ごとの例外" android:textAppearance="?attr/textAppearanceTitleSmall" android:textColor="?attr/colorOnSurface" />
+                <TextView android:id="@+id/tv_excluded_dates" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="4dp" android:paddingBottom="4dp" android:text="鳴らさない日: なし" android:textColor="?attr/colorOnSurfaceVariant" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                    <Button android:id="@+id/btn_add_excluded_date" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="鳴らさない日を追加" />
+                    <Button android:id="@+id/btn_remove_excluded_date" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="除外日を削除" />
+                </LinearLayout>
+                <TextView android:id="@+id/tv_date_overrides" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="4dp" android:paddingBottom="4dp" android:text="時刻変更: なし" android:textColor="?attr/colorOnSurfaceVariant" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                    <Button android:id="@+id/btn_add_date_override" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="日付別の時刻を追加" />
+                    <Button android:id="@+id/btn_remove_date_override" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="時刻変更を削除" />
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -224,6 +242,10 @@
                     android:minHeight="48dp"
                     android:text="アラーム鳴動モード（全画面＋停止／スヌーズ）"
                     android:textColor="?attr/colorOnSurface" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                    <Button android:id="@+id/btn_choose_alarm_sound" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="アラーム音を選ぶ" />
+                    <Button android:id="@+id/btn_preview_alarm_sound" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="音を試聴" />
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

@@ -42,16 +42,32 @@
     </LinearLayout>
 
     <!-- 即座にON/OFF切り替えできるボタン -->
-    <Button
-        android:id="@+id/widget_btn_toggle"
+    <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="36dp"
-        android:background="#30FFFFFF"
-        android:textColor="#FFFFFF"
-        android:textSize="11sp"
-        android:textStyle="bold"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp"
-        android:text="ON" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <Button
+            android:id="@+id/widget_btn_toggle"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:background="#30FFFFFF"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:text="ON" />
+        <Button
+            android:id="@+id/widget_btn_skip"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:layout_marginTop="2dp"
+            android:background="#30FFFFFF"
+            android:textColor="#FFFFFF"
+            android:textSize="10sp"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:text="今回スキップ" />
+    </LinearLayout>
 
 </LinearLayout>

@@ -3,6 +3,14 @@ package com.taryo.appalarm;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Build;
+import android.os.PowerManager;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.provider.Settings;
+import android.net.Uri;
+import android.app.AlarmManager;
+import android.app.NotificationManager;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -12,17 +20,19 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
-import android.net.Uri;
-import android.provider.DocumentsContract;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import org.json.JSONObject;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class SettingsActivity extends AppCompatActivity {
     private static final int REQ_EXPORT = 801, REQ_IMPORT = 802;
     private SharedPreferences backupPrefs;
+    private TextView tvBackupLast, tvPermissionStatus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +42,10 @@ public class SettingsActivity extends AppCompatActivity {
 
         final SharedPreferences prefs = getSharedPreferences("appalarm_prefs", MODE_PRIVATE);
         backupPrefs = prefs;
+        tvBackupLast = findViewById(R.id.tv_backup_last);
+        tvPermissionStatus = findViewById(R.id.tv_permission_status);
+        refreshBackupDate(); refreshPermissionStatus();
+        findViewById(R.id.btn_permission_check).setOnClickListener(v -> showPermissionOptions());
 
         // 0. システムカラー (Material You / Dynamic Colors) 設定
         SwitchCompat switchDynamicColor = findViewById(R.id.switch_dynamic_color);
@@ -186,6 +200,44 @@ public class SettingsActivity extends AppCompatActivity {
         btnImport.setOnClickListener(v -> { Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT); i.setType("application/json"); i.addCategory(Intent.CATEGORY_OPENABLE); startActivityForResult(i, REQ_IMPORT); });
     }
 
+    private void refreshBackupDate() {
+        long timestamp = backupPrefs.getLong("last_backup_timestamp", 0L);
+        String value = timestamp <= 0 ? "まだありません" : new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.JAPAN).format(new Date(timestamp));
+        tvBackupLast.setText("前回のバックアップ: " + value);
+    }
+
+    private void refreshPermissionStatus() {
+        boolean notification = Build.VERSION.SDK_INT < 33 || checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+        AlarmManager am = getSystemService(AlarmManager.class);
+        boolean exact = Build.VERSION.SDK_INT < 31 || (am != null && am.canScheduleExactAlarms());
+        NotificationManager nm = getSystemService(NotificationManager.class);
+        boolean full = Build.VERSION.SDK_INT < 34 || (nm != null && nm.canUseFullScreenIntent());
+        boolean calendar = checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED;
+        PowerManager power = getSystemService(PowerManager.class);
+        boolean unrestricted = power != null && power.isIgnoringBatteryOptimizations(getPackageName());
+        tvPermissionStatus.setText("通知: " + status(notification) + "\n正確なアラーム: " + status(exact)
+                + "\nロック中の全画面表示: " + status(full) + "\nカレンダー: " + status(calendar)
+                + "\n電池最適化の対象外: " + status(unrestricted));
+    }
+
+    private String status(boolean granted) { return granted ? "許可済み" : "未許可"; }
+
+    private void showPermissionOptions() {
+        refreshPermissionStatus();
+        String[] options = {"正確なアラーム設定", "通知設定", "全画面通知設定", "電池最適化設定", "カレンダー権限設定"};
+        new android.app.AlertDialog.Builder(this).setTitle("現在の状態")
+                .setMessage(tvPermissionStatus.getText())
+                .setItems(options, (dialog, which) -> {
+                    Intent intent;
+                    if (which == 0 && Build.VERSION.SDK_INT >= 31) intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:" + getPackageName()));
+                    else if (which == 1) { intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS); intent.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName()); }
+                    else if (which == 2 && Build.VERSION.SDK_INT >= 34) intent = new Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, Uri.parse("package:" + getPackageName()));
+                    else if (which == 3) intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                    else { intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName())); }
+                    try { startActivity(intent); } catch (Exception e) { Toast.makeText(this, "この設定画面を開けませんでした", Toast.LENGTH_SHORT).show(); }
+                }).setPositiveButton("閉じる", null).show();
+    }
+
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data); if (resultCode != RESULT_OK || data == null || data.getData() == null) return;
         Uri uri = data.getData();
@@ -193,20 +245,24 @@ public class SettingsActivity extends AppCompatActivity {
             if (requestCode == REQ_EXPORT) {
                 JSONObject root = new JSONObject(); root.put("format", "app-remind-backup-v1");
                 JSONObject values = new JSONObject();
-                for (String key : backupPrefs.getAll().keySet()) values.put(key, backupPrefs.getAll().get(key));
+                for (String key : backupPrefs.getAll().keySet()) if (!"last_backup_timestamp".equals(key)) values.put(key, backupPrefs.getAll().get(key));
                 org.json.JSONArray selectedAlarms = new org.json.JSONArray();
                 for (AlarmEntry alarm : AlarmEntry.loadAll(backupPrefs)) if (alarm.cloudBackupEnabled) selectedAlarms.put(alarm.toJsonObject());
                 values.put("alarm_list_json", selectedAlarms.toString());
                 root.put("preferences", values);
+                long createdAt = System.currentTimeMillis(); root.put("createdAt", createdAt);
                 try (OutputStream out = getContentResolver().openOutputStream(uri)) { out.write(root.toString(2).getBytes(StandardCharsets.UTF_8)); }
+                backupPrefs.edit().putLong("last_backup_timestamp", createdAt).apply(); refreshBackupDate();
                 Toast.makeText(this, "バックアップを書き出しました", Toast.LENGTH_SHORT).show();
             } else if (requestCode == REQ_IMPORT) {
                 ByteArrayOutputStream bytes = new ByteArrayOutputStream();
                 try (InputStream in = getContentResolver().openInputStream(uri)) { byte[] buf = new byte[4096]; int n; while ((n = in.read(buf)) > 0) bytes.write(buf, 0, n); }
                 JSONObject root = new JSONObject(bytes.toString("UTF-8")); JSONObject values = root.getJSONObject("preferences");
+                long previousBackup = backupPrefs.getLong("last_backup_timestamp", 0L);
                 SharedPreferences.Editor ed = backupPrefs.edit(); ed.clear();
                 for (java.util.Iterator<String> it = values.keys(); it.hasNext();) { String k = it.next(); Object val = values.get(k); if (val instanceof Boolean) ed.putBoolean(k, (Boolean) val); else if (val instanceof Integer) ed.putInt(k, (Integer) val); else if (val instanceof Long) ed.putLong(k, (Long) val); else if (val instanceof String) ed.putString(k, (String) val); }
-                ed.apply(); AlarmReceiver.rescheduleAll(this, AlarmEntry.loadAll(backupPrefs));
+                ed.putLong("last_backup_timestamp", previousBackup);
+                ed.apply(); refreshBackupDate(); AlarmReceiver.rescheduleAll(this, AlarmEntry.loadAll(backupPrefs));
                 Toast.makeText(this, "バックアップを復元しました", Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) { Toast.makeText(this, "ファイルを読み書きできません: " + e.getMessage(), Toast.LENGTH_LONG).show(); }

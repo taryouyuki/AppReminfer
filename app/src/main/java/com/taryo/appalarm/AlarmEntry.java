@@ -66,6 +66,9 @@ public class AlarmEntry {
     public boolean cloudBackupEnabled = false;
     public boolean watchEnabled = false;
     public boolean analyticsEnabled = true;
+    public String excludedDates = ""; // comma-separated yyyy-MM-dd local dates
+    public String dateOverrides = ""; // comma-separated yyyy-MM-dd=HH:mm local overrides
+    public String skipOnceDate = ""; // widget one-time skip for a recurring alarm
 
     public JSONObject toJsonObject() throws JSONException {
         JSONObject obj = new JSONObject();
@@ -109,6 +112,9 @@ public class AlarmEntry {
         obj.put("cloudBackupEnabled", cloudBackupEnabled);
         obj.put("watchEnabled", watchEnabled);
         obj.put("analyticsEnabled", analyticsEnabled);
+        obj.put("excludedDates", excludedDates);
+        obj.put("dateOverrides", dateOverrides);
+        obj.put("skipOnceDate", skipOnceDate);
         return obj;
     }
 
@@ -154,6 +160,9 @@ public class AlarmEntry {
         e.cloudBackupEnabled = obj.optBoolean("cloudBackupEnabled", false);
         e.watchEnabled = obj.optBoolean("watchEnabled", false);
         e.analyticsEnabled = obj.optBoolean("analyticsEnabled", true);
+        e.excludedDates = obj.optString("excludedDates", "");
+        e.dateOverrides = obj.optString("dateOverrides", "");
+        e.skipOnceDate = obj.optString("skipOnceDate", "");
         return e;
     }
 

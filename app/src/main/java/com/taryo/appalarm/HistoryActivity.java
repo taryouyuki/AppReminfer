@@ -90,17 +90,22 @@ public class HistoryActivity extends AppCompatActivity {
 
         String insight = HistoryRecord.findMostSnoozedAlarm(records);
         java.util.Calendar c = java.util.Calendar.getInstance();
-        int[] snoozeByHour = new int[24], triggersByDay = new int[7], snoozeByDay = new int[7];
+        int[] handledByHour = new int[24], snoozeByHour = new int[24], stopByHour = new int[24];
+        int[] handledByDay = new int[7], snoozeByDay = new int[7], stopByDay = new int[7];
         for (HistoryRecord r : records) { c.setTimeInMillis(r.timestamp); int h=c.get(java.util.Calendar.HOUR_OF_DAY), d=(c.get(java.util.Calendar.DAY_OF_WEEK)+5)%7;
-            if (HistoryRecord.ACTION_NOTIFY.equals(r.action)) triggersByDay[d]++;
-            if (HistoryRecord.ACTION_SNOOZE.equals(r.action)) { snoozeByHour[h]++; snoozeByDay[d]++; }
+            if (HistoryRecord.ACTION_SNOOZE.equals(r.action)) { handledByHour[h]++; snoozeByHour[h]++; handledByDay[d]++; snoozeByDay[d]++; }
+            else if (HistoryRecord.ACTION_STOP.equals(r.action)) { handledByHour[h]++; stopByHour[h]++; handledByDay[d]++; stopByDay[d]++; }
         }
-        int worstHour=0, worstDay=0; for(int i=1;i<24;i++) if(snoozeByHour[i]>snoozeByHour[worstHour]) worstHour=i;
-        for(int i=1;i<7;i++) if(triggersByDay[i]>0 && (triggersByDay[worstDay]==0 || snoozeByDay[i]*1f/triggersByDay[i]>snoozeByDay[worstDay]*1f/triggersByDay[worstDay])) worstDay=i;
+        int worstHour=-1, worstDay=-1;
+        for(int i=0;i<24;i++) if(handledByHour[i]>0 && (worstHour<0 || snoozeByHour[i]*1f/handledByHour[i]>snoozeByHour[worstHour]*1f/handledByHour[worstHour])) worstHour=i;
+        for(int i=0;i<7;i++) if(handledByDay[i]>0 && (worstDay<0 || snoozeByDay[i]*1f/handledByDay[i]>snoozeByDay[worstDay]*1f/handledByDay[worstDay])) worstDay=i;
         String[] days={"月","火","水","木","金","土","日"};
-        String dayInsight = triggersByDay[worstDay]==0 ? "曜日別分析: まだ記録がありません" : "曜日別: "+days[worstDay]+"曜のスヌーズ率 "+(100*snoozeByDay[worstDay]/triggersByDay[worstDay])+"%";
-        tvInsight.setText(insight+"\n"+dayInsight+"\n時間帯: "+String.format(java.util.Locale.JAPAN,"%02d時台",worstHour)+"が最多スヌーズ ("+snoozeByHour[worstHour]+"回)");
+        String dayInsight = worstDay < 0 ? "曜日別: まだ停止・スヌーズの記録がありません" : "曜日別傾向: "+days[worstDay]+"曜は停止 "+percent(stopByDay[worstDay], handledByDay[worstDay])+"% / スヌーズ "+percent(snoozeByDay[worstDay], handledByDay[worstDay])+"%";
+        String hourInsight = worstHour < 0 ? "時間帯別: まだ記録がありません" : String.format(java.util.Locale.JAPAN,"時間帯傾向: %02d時台は停止 %d%% / スヌーズ %d%%", worstHour, percent(stopByHour[worstHour], handledByHour[worstHour]), percent(snoozeByHour[worstHour], handledByHour[worstHour]));
+        tvInsight.setText(insight+"\n"+dayInsight+"\n"+hourInsight);
     }
+
+    private int percent(int part, int total) { return total == 0 ? 0 : (100 * part / total); }
 
     private class HistoryAdapter extends BaseAdapter {
         private final SimpleDateFormat sdf = new SimpleDateFormat("MM/dd HH:mm", Locale.JAPAN);

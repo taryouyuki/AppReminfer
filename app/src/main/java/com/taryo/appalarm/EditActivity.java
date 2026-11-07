@@ -532,6 +532,8 @@ public class EditActivity extends AppCompatActivity {
         entry.progressiveEnabled = cbProgressive.isChecked(); entry.calendarEnabled = cbCalendar.isChecked();
         entry.cloudBackupEnabled = cbCloud.isChecked(); entry.watchEnabled = cbWatch.isChecked(); entry.analyticsEnabled = cbAnalytics.isChecked();
         entry.enabled = true;
+        // Editing a quick-delay alarm converts it back to a normal minute-based one-shot alarm.
+        entry.oneShotAtMillis = 0;
 
         int repeatIdx = spinnerRepeat.getSelectedItemPosition();
         if (repeatIdx == 1) {

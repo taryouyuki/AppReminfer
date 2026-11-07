@@ -56,6 +56,11 @@ public class MainActivity extends AppCompatActivity {
         Button btnHistory = findViewById(R.id.btn_history);
         Button btnSettings = findViewById(R.id.btn_settings);
 
+        findViewById(R.id.btn_quick_1).setOnClickListener(v -> createQuickAlarm(1));
+        findViewById(R.id.btn_quick_5).setOnClickListener(v -> createQuickAlarm(5));
+        findViewById(R.id.btn_quick_10).setOnClickListener(v -> createQuickAlarm(10));
+        findViewById(R.id.btn_quick_30).setOnClickListener(v -> createQuickAlarm(30));
+
         adapter = new AlarmAdapter();
         listView.setAdapter(adapter);
 
@@ -216,6 +221,33 @@ public class MainActivity extends AppCompatActivity {
         } else {
             tvNextSummary.setText("次回予定: 有効なアラームはありません");
         }
+    }
+
+    private void createQuickAlarm(int minutes) {
+        long triggerAt = System.currentTimeMillis() + minutes * 60_000L;
+        java.util.Calendar when = java.util.Calendar.getInstance();
+        when.setTimeInMillis(triggerAt);
+
+        AlarmEntry entry = new AlarmEntry();
+        entry.id = (int) System.currentTimeMillis();
+        entry.hour = when.get(java.util.Calendar.HOUR_OF_DAY);
+        entry.minute = when.get(java.util.Calendar.MINUTE);
+        entry.year = when.get(java.util.Calendar.YEAR);
+        entry.month = when.get(java.util.Calendar.MONTH) + 1;
+        entry.day = when.get(java.util.Calendar.DAY_OF_MONTH);
+        entry.mode = AlarmEntry.MODE_ONCE;
+        entry.label = minutes + "分後のアラーム";
+        entry.oneShotAtMillis = triggerAt;
+        entry.alarmMode = true;
+        entry.standaloneAlarm = true;
+        entry.enabled = true;
+
+        allAlarms.add(entry);
+        SharedPreferences prefs = getSharedPreferences("appalarm_prefs", MODE_PRIVATE);
+        AlarmEntry.saveAll(prefs, allAlarms);
+        AlarmReceiver.rescheduleAll(this, allAlarms);
+        loadAlarmsAndRefresh();
+        android.widget.Toast.makeText(this, minutes + "分後にアラームを設定しました", android.widget.Toast.LENGTH_SHORT).show();
     }
 
     private class AlarmAdapter extends BaseAdapter {

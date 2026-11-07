@@ -10,6 +10,7 @@ public class NextTime {
         now.setTimeInMillis(nowMillis);
 
         if (entry.mode == AlarmEntry.MODE_ONCE) {
+            if (entry.oneShotAtMillis > 0) return entry.oneShotAtMillis > nowMillis ? entry.oneShotAtMillis : 0;
             Calendar candidate = Calendar.getInstance();
             if (entry.year > 0 && entry.month > 0 && entry.day > 0) candidate.set(entry.year, entry.month - 1, entry.day, entry.hour, entry.minute, 0);
             else {

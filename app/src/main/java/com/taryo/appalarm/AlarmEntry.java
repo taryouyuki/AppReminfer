@@ -71,6 +71,7 @@ public class AlarmEntry {
     public String excludedDates = ""; // comma-separated yyyy-MM-dd local dates
     public String dateOverrides = ""; // comma-separated yyyy-MM-dd=HH:mm local overrides
     public String skipOnceDate = ""; // widget one-time skip for a recurring alarm
+    public long oneShotAtMillis = 0; // exact trigger time for quick alarms; 0 for regular alarms
 
     public JSONObject toJsonObject() throws JSONException {
         JSONObject obj = new JSONObject();
@@ -119,6 +120,7 @@ public class AlarmEntry {
         obj.put("excludedDates", excludedDates);
         obj.put("dateOverrides", dateOverrides);
         obj.put("skipOnceDate", skipOnceDate);
+        obj.put("oneShotAtMillis", oneShotAtMillis);
         return obj;
     }
 
@@ -169,6 +171,7 @@ public class AlarmEntry {
         e.excludedDates = obj.optString("excludedDates", "");
         e.dateOverrides = obj.optString("dateOverrides", "");
         e.skipOnceDate = obj.optString("skipOnceDate", "");
+        e.oneShotAtMillis = obj.optLong("oneShotAtMillis", 0);
         return e;
     }
 

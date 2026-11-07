@@ -12,7 +12,8 @@ import androidx.core.app.NotificationCompat;
 public class NotificationHelper {
 
     public static final String CHANNEL_ID_ALARM = "channel_alarm";
-    public static final String CHANNEL_ID_PROMPT = "channel_prompt";
+    // New channel id avoids carrying forward the old channel's forced-silent behavior.
+    public static final String CHANNEL_ID_PROMPT = "channel_prompt_v2";
 
     public static void createChannels(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -30,10 +31,14 @@ public class NotificationHelper {
 
             NotificationChannel promptCh = new NotificationChannel(
                     CHANNEL_ID_PROMPT,
-                    "アプリ起動確認",
+                    "リマインダー通知（画面上部に表示）",
                     NotificationManager.IMPORTANCE_HIGH
             );
             promptCh.enableVibration(true);
+            promptCh.setVibrationPattern(new long[]{0, 250, 150, 250});
+            // The selected alarm sound / TTS is played separately; keep this channel
+            // silent while retaining high importance for heads-up display.
+            promptCh.setSound(null, null);
             nm.createNotificationChannel(promptCh);
         }
     }
@@ -74,7 +79,7 @@ public class NotificationHelper {
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setLocalOnly(!entry.watchEnabled)
-                .setSilent(true)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setAutoCancel(true)
                 .setContentIntent(openPi)
                 .setDeleteIntent(dismissPi)

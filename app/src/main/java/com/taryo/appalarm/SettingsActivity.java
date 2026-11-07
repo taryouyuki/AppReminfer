@@ -240,10 +240,15 @@ public class SettingsActivity extends AppCompatActivity {
             android.app.NotificationChannel channel = nm.getNotificationChannel(NotificationHelper.CHANNEL_ID_ALARM);
             alarmChannel = channel == null ? "未作成" : (channel.getImportance() >= NotificationManager.IMPORTANCE_HIGH ? "高（全画面表示に対応）" : "低（高に変更が必要）");
         }
+        String promptChannel = "Android 8未満";
+        if (Build.VERSION.SDK_INT >= 26 && nm != null) {
+            android.app.NotificationChannel channel = nm.getNotificationChannel(NotificationHelper.CHANNEL_ID_PROMPT);
+            promptChannel = channel == null ? "次回通知時に作成" : (channel.getImportance() >= NotificationManager.IMPORTANCE_HIGH ? "高（バナー表示に対応）" : "低（高に変更が必要）");
+        }
         PowerManager power = getSystemService(PowerManager.class);
         boolean unrestricted = power != null && power.isIgnoringBatteryOptimizations(getPackageName());
         tvPermissionStatus.setText("通知: " + status(notification) + "\n正確なアラーム: " + status(exact)
-                + "\nロック中の全画面表示: " + status(full) + "\nアラーム通知の重要度: " + alarmChannel + "\n他アプリの上に表示: アラームには不要\nカレンダー: " + status(calendar)
+                + "\nロック中の全画面表示: " + status(full) + "\nアラーム通知の重要度: " + alarmChannel + "\n通知バナーの重要度: " + promptChannel + "\n他アプリの上に表示: アラームには不要\nカレンダー: " + status(calendar)
                 + "\n電池最適化の対象外: " + status(unrestricted));
     }
 
@@ -289,7 +294,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void showPermissionOptions() {
         refreshPermissionStatus();
-        String[] options = {"正確なアラーム設定", "通知の許可", "全画面通知設定", "電池最適化設定", "カレンダー権限を許可"};
+        String[] options = {"正確なアラーム設定", "通知の許可", "全画面通知設定", "電池最適化設定", "カレンダー権限を許可", "通知バナー（画面上部）の設定"};
         new android.app.AlertDialog.Builder(this).setTitle("現在の状態")
                 .setMessage(tvPermissionStatus.getText())
                 .setItems(options, (dialog, which) -> {
@@ -304,6 +309,12 @@ public class SettingsActivity extends AppCompatActivity {
                     else if (which == 1) { intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS); intent.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName()); }
                     else if (which == 2 && Build.VERSION.SDK_INT >= 34) intent = new Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, Uri.parse("package:" + getPackageName()));
                     else if (which == 3) intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                    else if (which == 5 && Build.VERSION.SDK_INT >= 26) {
+                        intent = new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS);
+                        intent.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+                        intent.putExtra(Settings.EXTRA_CHANNEL_ID, NotificationHelper.CHANNEL_ID_PROMPT);
+                    }
+                    else if (which == 5) { intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS); intent.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName()); }
                     else intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()));
                     try { startActivity(intent); } catch (Exception e) { Toast.makeText(this, "この設定画面を開けませんでした", Toast.LENGTH_SHORT).show(); }
                 }).setPositiveButton("閉じる", null).show();

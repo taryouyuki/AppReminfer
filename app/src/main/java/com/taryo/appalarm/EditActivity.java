@@ -428,8 +428,10 @@ public class EditActivity extends AppCompatActivity {
         final String sentence = text;
         previewTts = new TextToSpeech(this, status -> {
             if (status == TextToSpeech.SUCCESS && previewTts != null) {
+                VoiceAlarmService.configureNotificationTts(previewTts);
                 previewTts.setLanguage(Locale.JAPAN);
-                previewTts.speak(sentence, TextToSpeech.QUEUE_FLUSH, null, "voice-preview");
+                previewTts.speak(sentence, TextToSpeech.QUEUE_FLUSH,
+                        VoiceAlarmService.notificationTtsParams(EditActivity.this), "voice-preview");
             } else Toast.makeText(this, "この端末では日本語の音声合成を利用できません", Toast.LENGTH_LONG).show();
         });
     }

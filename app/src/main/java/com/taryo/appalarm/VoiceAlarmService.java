@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
 import android.media.AudioAttributes;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -82,6 +81,23 @@ public class VoiceAlarmService extends Service implements TextToSpeech.OnInitLis
         return Math.max(-5, Math.min(10, prefs.getInt("tts_volume_offset_steps", 5)));
     }
 
+    public static void configureNotificationTts(TextToSpeech engine) {
+        engine.setAudioAttributes(new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                .build());
+    }
+
+    public static android.os.Bundle notificationTtsParams(Context context) {
+        int offset = getTtsVolumeOffset(context);
+        // KEY_PARAM_VOLUME is relative to the notification stream; +10 means full TTS level.
+        float speechGain = Math.max(0f, Math.min(1f, (offset + 5) / 15f));
+        android.os.Bundle params = new android.os.Bundle();
+        params.putInt(TextToSpeech.Engine.KEY_PARAM_STREAM, android.media.AudioManager.STREAM_NOTIFICATION);
+        params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, speechGain);
+        return params;
+    }
+
     @Override public void onCreate() {
         super.onCreate();
         createChannel();
@@ -151,10 +167,7 @@ public class VoiceAlarmService extends Service implements TextToSpeech.OnInitLis
 
     @Override public void onInit(int status) {
         if (status != TextToSpeech.SUCCESS || tts == null) { stopSelf(); return; }
-        tts.setAudioAttributes(new AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_ALARM)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                .build());
+        configureNotificationTts(tts);
         int language = tts.setLanguage(Locale.JAPAN);
         if (language == TextToSpeech.LANG_MISSING_DATA || language == TextToSpeech.LANG_NOT_SUPPORTED) {
             tts.setLanguage(Locale.getDefault());
@@ -171,14 +184,7 @@ public class VoiceAlarmService extends Service implements TextToSpeech.OnInitLis
     private void speakPending() {
         if (!ready || tts == null || pendingText == null) return;
         tts.stop();
-        AudioManager audio = (AudioManager) getSystemService(AUDIO_SERVICE);
-        int max = audio == null ? 0 : audio.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
-        int current = audio == null ? max : audio.getStreamVolume(AudioManager.STREAM_NOTIFICATION);
-        int offset = getTtsVolumeOffset(this);
-        float level = max <= 0 ? 1f : Math.max(0, Math.min(max, current + offset)) / (float) max;
-        android.os.Bundle parameters = new android.os.Bundle();
-        parameters.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, level);
-        tts.speak(pendingText, TextToSpeech.QUEUE_FLUSH, parameters, "alarm-" + latestStartId);
+        tts.speak(pendingText, TextToSpeech.QUEUE_FLUSH, notificationTtsParams(this), "alarm-" + latestStartId);
     }
 
     @Override public void onDestroy() {
